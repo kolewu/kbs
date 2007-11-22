@@ -1,0 +1,117 @@
+kbs -- kitgen build system
+==========================
+
+The system can generate [Tclkit Lite] executables and Tcl packages for
+different operating systems. 
+  [Tclkit Lite]: http://www.equi4.com/tclkit/tclkitlite.html
+
+Currently tested are Linux, SunOS, Windows and Irix.
+You need a C-compiler and make-program with handling of VPATH variables (gmake).
+
+To build under Windows you need the [msys] system and put the kbs-sources
+inside the msys tree (/home/..).
+  [msys]:   http://sourceforge.net/project/showfiles.php?group_id=10894
+
+Sources
+-------
+
+Sources are available from http://sourceforge.net/projects/kbskit
+
+  kbs.tcl    - command line application
+  kbsgui.tcl - gui application (needs kbs.tcl)
+
+  kbskit/    - extension to build tclkits
+
+kit-executables:
+  *cli* - shell application
+  *dyn* - tk dynamic loadable
+  *gui* - tk static inserted
+kit-files;
+  kbspkg85.kit with:
+    bwidget-1.8.0 gridplus-2.2 img-1.3 memchan-2.2.1 mentry-3.1 sqlite-3.5.2
+    tablelist-4.8 tcllib-1.10 tclx-8.4 tdom-0.8.2 thread-2.6.5 tklib-0.4.1
+    tktable-2.9 tktreectrl-2.2.3 trofs-0.4.4 udp-1.0.8 wcb-3.1 xotcl-1.5.6
+  tksqlite.kit - ready to run sqlite table editor
+
+Quick start
+-----------
+
+Build executables:
+  ./kbs.tcl -r install kbskit-8.5
+Build kit-files:
+  ./kbs.tcl -r install kbspkg-8.5
+  ./kbs.tcl -r install tksqlite-0.5.5
+
+Display online help:
+  ./kbs.tcl
+=== Read definitions from /home/rene/kbs/sources/kbskit-0.1/kbskit.kbs
+Kitgen Build System
+kbs.tcl ?options? mode ?args?
+options:
+  -builddir=?dir?      default is 'build$tcl_platform(os)', use with [Builddir]
+  -sourcedir=?dir?     default is 'sources'
+  -pkgfile=?file?      default is 'sources/kbskit-0.1/kbskit.kbs', contain used Package definitions
+  -i -ignore           ignore errors and proceed (default is disabled)
+  -r -recursive        recursive Require packages (default is disabled)
+  -v -verbose          display running commands and command output
+  --CC=?command?       set configuration variable _(CC)
+                       default is 'gcc' or existing environment variable 'CC'
+  --enable-symbols
+  --disable-symbols    set configuration variable _(SYMBOLS)
+  --enable-64bit
+  --disable-64bit      set configuration variable _(64BIT)
+  --enable-threads
+  --disable-threads    set configuration variable _(THREADS)
+  --enable-aqua
+  --disable-aqua       set configuration variable _(AQUA)
+ mode:
+  help                 this text
+  kbs                  return information about *.kbs commands
+  list ?pattern?       list packages matching pattern (default is *)
+  require package ..   return call trace of packages
+  sources package ..   get package source files (under sources/)
+  configure package .. create [Makedir] (in [Builddir]) and configure package
+  make package ..      make package (in [Makedir])
+  install package ..   install package (in [Builddir])
+  test package ..      test package
+  clean package ..     remove make targets
+  distclean package .. remove [Makedir]
+package is used for glob style matching against available packages
+(Beware, you need to hide the special meaning of * like foo\*)
+
+The following configuration variables can be used:
+_(64BIT)   = --disable-64bit
+_(AQUA)    = --enable-aqua
+_(CC)      = gcc
+_(DIR)     = unix
+_(SHARED)  = --enable-shared
+_(STATIC)  = --disable-shared
+_(SYMBOLS) = --disable-symbols
+_(THREADS) = --enable-threads
+_(TZDATA)  = --with-tzdata
+
+License & support
+-----------------
+
+This work is under BSD license (see file 'license.terms')
+
+The [Tclkit]-specific sources are license free, they just have a copyright. Hold
+the author(s) harmless and any lawful use is permitted.
+
+This does *not* apply to any of the sources of the other major Open Source
+Software used in Tclkit, which each have very liberal BSD/MIT-like licenses:
+
+  * Tcl/Tk, TclVFS, Thread, Vlerq, Zlib
+
+Used extensions have own licenses. Please see in the sources.
+
+Acknowledgements
+----------------
+
+This work is based on the [Kitgen] system (http://www.equi4.com/kitgen.html)
+and ideas and code about a kitgen build system by Jean-Claude Wippler.
+
+With thanks to John Ousterhout for creating Tcl/Tk, Matt Newman and Vince Darley
+for developing the virtual file system, and the members of the Tcl Core Team for
+diligently maintaining and taking forward the Tcl/Tk code base plus extensions.
+

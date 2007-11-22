@@ -1,0 +1,96 @@
+2007-11-22  Rene Zaumseil <r.zaumseil@freenet.de>
+	* kbskit: created project under 'kbskit.sourceforge.net'
+	* kbs.tcl, kbsgui.tcl:
+	- insert load of kbskit extension
+	* sources/kbskit-0.1/kbskit.kbs: (moved from kbs/defs.kbs)
+	- tcl/tk 8.5b3
+	- tksqlite 0.5.5 create kitfile
+	- fixes for sun sparc
+2007-11-10  Rene Zaumseil <r.zaumseil@freenet.de>
+	* kbs.tcl:
+	- fix recursive sources call under windows
+	* kbs/defs.kbs:
+	- tktreectrl-2.2.3 fix for windows
+	  Thanks to Uwe Koloska <koloska@voiceinterconnect.de>
+2007-11-07  Rene Zaumseil <r.zaumseil@freenet.de>
+	* sources/kbskit-0.1/configure.in Makefile.in:
+	- added windows ressources
+	- added '-mwindows' flag in gui build
+2007-11-02  Rene Zaumseil <r.zaumseil@freenet.de>
+	* kbs.tcl kbsgui.tcl:
+	- fixed wrong cvs tags
+	* kbs/defs.kbs:
+	- tcloo-0.1 wrong tag in Source statement corrected
+	  Thanks to <lvirden@gmail.com>
+	* kbs/sources/kbskit-0.1/configure.in and configure:
+	  used ':' instead of ' ' to separate VPATH in unix (fix sun make?)
+2007-10-29  Rene Zaumseil <r.zaumseil@freenet.de>
+	* kbs/defs.kbs: removed packages, itcl-ng still under development
+	- itcl, itk, iwidgets
+	* kbs/defs.kbs: new packages
+	- tcloo 0.1.1
+	- tktreectrl 2.2.3
+	* kbs/defs.kbs: updated packages
+	- tcl/tk 8.5b2
+	- update: vfs, vlerq and zlib from www.equi4.com
+	- update: tdom 0.8.2, sqlite 3.5.1, tablelist 4.8, trofs-0.4.4
+	- Package kbskit* accept now "--disable-threads" for thread free build
+	* kbs/kbs.tcl kbs/defs.kbs:
+	- new 'Patch' procedure to patch sources
+	- new 'Tcl' procedure to install tcl only extensions
+2007-07-15  Rene Zaumseil <r.zaumseil@freenet.de>
+	* build*/bin/:
+	Results are now called "kbskit*" and "kbspkg*".
+	This is to avoid conflicts with other "tclkit*" executables.
+	* kbs/defs.kbs:
+	- update of packages
+	  sqlite 3.4.0, tablelist 4.7
+	  tcllib 1.9 with snit from HEAD (because of {*} errors)
+	- removed packages:
+	  package-8.5 package-8.4
+	- new targets to build kit file of packages:
+	  kbspkg-8.4 kbspkg-8.5
+	* kbs/kbs.tcl:
+	- fix not setting of _ variable in config::configure
+	  Thanks to Uwe Koloska <koloska@voiceinterconnect.de>
+	- new "Kit" proc to make, install, clean and run kit files.
+	  For examples see "Package kbspkg*" in "kbs/kbs/defs.kbs"
+	- removed Result target and options, "kbspkg" is new result target 
+	* kbs/kbsgui.tcl:
+	- removed Result target and options, "kbspkg" is new result target 
+2007-07-03  Rene Zaumseil <r.zaumseil@freenet.de>
+	* kbs/resultSunOS*/
+	- SunOS binaries, format: ELF 32-bit MSB executable, SPARC32PLUS, V8+
+	* kbs/kbs.tcl:
+	- fix error in "clean" target command
+	* kbs/kbsgui.tcl:
+	- changed to ttk look
+	- fixed command errors
+	- changed message dialogs
+2007-06-21  Rene Zaumseil <r.zaumseil@freenet.de>
+	* kbs/kbs.tcl:
+	- fix error in "Source link.." command
+	- successfull builds of 8.4 version
+	* kbs/defs.kbs:
+	- update packages:
+	  itcl/tk 3.4, tcl 8.4.15, sqlite 3.3.17, ral 0.8.4
+	- no Require of tcl/tk (because of version problems) ->
+	  build before or put on command line or edit defs.kbs "Package tcl ..}
+	- added builds of:
+	  trofs-0.4.3 snack-2.2.10 tdom-0.8.1 ral-0.8.4
+2007-06-02  Rene Zaumseil <r.zaumseil@freenet.de>
+	* kbs/kbs.tcl kbs/kbsgui.tcl kbs/kbs/defs.tcl:
+	First version of gui application
+	Added control of variables on command line (see --* switches)
+	Commands accept now one or more package patterns
+	Changed package definitions to allow 8.4 and 8.5 builds
+	Added result for IRIX64
+
+2007-05-26  Rene Zaumseil <r.zaumseil@freenet.de>
+	* kbs/kbs.tcl kbs/kbs/defs.tcl: Changed "Source" command.
+	Added "-v", "-verbose" option.
+	Info about login to get tkhtml sources.
+
+2007-05-24  Rene Zaumseil <r.zaumseil@freenet.de>
+	* first official release
+
