@@ -722,6 +722,7 @@ proc config::Kit {mode name args} {
       file delete -force $myName
       #does not work under "msys": file link $myName [Srcdir tcl]
       Run ln -s [Srcdir sys] $myName
+      file mkdir $myName/lib
       foreach myPath [glob -nocomplain $myName/lib/*] {;# remove all links
         if {[file type $myPath] == "link"} {
           file delete -force $myPath
