@@ -1,8 +1,14 @@
+2007-11-26  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.1.
+	* kbs/kbsgui.tcl: integrated in kbs.tcl and removed from repository
+	* kbs/kbs.tcl:
+	- new 'gui' command to start gui, several gui enhancements
+	* kbskit/kbskit.kbs: synchronized version with used tcl/tk
 2007-11-22  Rene Zaumseil <r.zaumseil@freenet.de>
 	* kbskit: created project under 'kbskit.sourceforge.net'
-	* kbs.tcl, kbsgui.tcl:
+	* kbs/kbs.tcl, kbs/kbsgui.tcl:
 	- insert load of kbskit extension
-	* sources/kbskit-0.1/kbskit.kbs: (moved from kbs/defs.kbs)
+	* kbskit/kbskit.kbs: (moved from kbs/defs.kbs)
 	- tcl/tk 8.5b3
 	- tksqlite 0.5.5 create kitfile
 	- fixes for sun sparc
