@@ -9,7 +9,7 @@
 ## See the file "license.terms" for information on usage and redistribution of
 ## this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #===============================================================================
-# bootstrap for building tclsh.. \
+# bootstrap for building wish.. \
 PREFIX=`pwd`/`uname` ;\
 case `uname` in \
   MINGW*) DIR="win"; EXE="${PREFIX}/bin/tclsh85s.exe" ;; \
@@ -20,34 +20,43 @@ if test ! -x ${EXE} ; then \
   if test ! -d sources/tcl-8.5 ; then \
     ( cd sources && cvs -d :pserver:anonymous@tcl.cvs.sourceforge.net:/cvsroot/tcl -z3 co -r core-8-5-b3 tcl && mv tcl tcl-8.5 ) ;\
   fi ;\
-  mkdir ${PREFIX} ;\
-  mkdir ${PREFIX}/tcl ;\
+  if test ! -d sources/tk-8.5 ; then \
+    ( cd sources && cvs -d :pserver:anonymous@tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -z3 co -r core-8-5-b3 tk && mv tk tk-8.5 ) ;\
+  fi ;\
+  mkdir -p ${PREFIX}/tcl ;\
   ( cd ${PREFIX}/tcl && ../../sources/tcl-8.5/${DIR}/configure --disable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} && make install-binaries install-libraries ) ;\
   rm -rf ${PREFIX}/tcl ;\
+  mkdir -p ${PREFIX}/tk ;\
+  ( cd ${PREFIX}/tk && ../../sources/tk-8.5/${DIR}/configure --enable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} --with-tcl=${PREFIX}/lib && make install-binaries install-libraries ) ;\
 fi ;\
-if test ! -d sources/kbskit-0.1 ; then\
-  ( cd sources && cvs -d :pserver:anonymous@kbskit.cvs.sourceforge.net:/cvsroot/kbskit -z3 co kbskit && mv kbskit kbskit-0.1 ) ;\
+if test ! -d sources/kbskit-8.5b3 ; then\
+  ( cd sources && cvs -d :pserver:anonymous@kbskit.cvs.sourceforge.net:/cvsroot/kbskit -z3 co kbskit && mv kbskit kbskit-8.5b3) ;\
 fi ;\
 exec ${EXE} "$0" ${1+"$@"}
 #===============================================================================
 
-namespace eval kbs {
+catch {wm withdraw .};# do not show toplevel in command line mode
+
+#===NAMESPACE===================================================================
+
+namespace eval ::kbs {
 }
-    
+
 #-------------------------------------------------------------------------------
 
-proc kbs::help {} {
-  puts {Kitgen Build System
-kbs.tcl ?options? mode ?args?
+proc ::kbs::help {} {
+  puts "Kitgen Build System ([version])"
+  puts {kbs.tcl ?options? mode ?args?
 options:
-  -builddir=?dir?      default is 'build$tcl_platform(os)', use with [Builddir]
-  -sourcedir=?dir?     default is 'sources'
-  -pkgfile=?file?      default is 'sources/kbskit-0.1/kbskit.kbs', contain used Package definitions
+  -pkgfile=?file?      contain used Package definitions
+                       (default is 'sources/kbskit-8.5b3/kbskit.kbs')
+  -builddir=?dir?      build directory, used with [Builddir]
+                       (default is './build$tcl_platform(os)')
+  -CC=?command?        set configuration variable _(CC)
+                       (default is 'gcc' or existing environment variable 'CC')
   -i -ignore           ignore errors and proceed (default is disabled)
   -r -recursive        recursive Require packages (default is disabled)
   -v -verbose          display running commands and command output
-  --CC=?command?       set configuration variable _(CC)
-                       default is 'gcc' or existing environment variable 'CC'
   --enable-symbols
   --disable-symbols    set configuration variable _(SYMBOLS)
   --enable-64bit
@@ -58,7 +67,9 @@ options:
   --disable-aqua       set configuration variable _(AQUA)
  mode:
   help                 this text
+  version              return current version
   kbs                  return information about *.kbs commands
+  gui                  start graphical user interface
   list ?pattern?       list packages matching pattern (default is *)
   require package ..   return call trace of packages
   sources package ..   get package source files (under sources/)
@@ -72,15 +83,21 @@ package is used for glob style matching against available packages
 (Beware, you need to hide the special meaning of * like foo\*)
 
 The following configuration variables can be used:}
-  namespace eval ::config {parray _}
+  namespace eval ::kbs::config {parray _}
 }
 
 #-------------------------------------------------------------------------------
 
-proc kbs::kbs {} {
+proc ::kbs::version {} {
+  return [lindex {$Revision$} 1]
+}
+
+#-------------------------------------------------------------------------------
+
+proc ::kbs::kbs {} {
   set myFd [open [info script] r]
   while {[gets $myFd myLine] != -1} {
-    if {[string range $myLine 0 1] == "##"} {
+    if {[string range $myLine 0 1] eq {##}} {
       puts [string range $myLine 2 end]
     }
   }
@@ -89,71 +106,77 @@ proc kbs::kbs {} {
 
 #-------------------------------------------------------------------------------
 
-proc kbs::list {{pattern *}} {
-  puts [lsort -dict [array names ::config::packages $pattern]]
+proc ::kbs::gui {args} {
+  ::kbs::gui::init $args
 }
 
 #-------------------------------------------------------------------------------
 
-proc kbs::require {args} {
-  ::config::init {Require} {Source Configure Make Test Install Clean} $args
+proc ::kbs::list {{pattern *}} {
+  puts [lsort -dict [array names ::kbs::config::packages $pattern]]
 }
 
 #-------------------------------------------------------------------------------
 
-proc kbs::sources {args} {
-  ::config::init {Require Source} {Configure Make Test Install Clean} $args
+proc ::kbs::require {args} {
+  ::kbs::config::init {Require} {Source Configure Make Test Install Clean} $args
 }
 
 #-------------------------------------------------------------------------------
 
-proc kbs::configure {args} {
-  ::config::init {Require Source Configure} {Make Test Install Clean} $args
+proc ::kbs::sources {args} {
+  ::kbs::config::init {Require Source} {Configure Make Test Install Clean} $args
 }
 
 #-------------------------------------------------------------------------------
 
-proc kbs::make {args} {
-  ::config::init {Require Source Configure Make} {Test Install Clean} $args
+proc ::kbs::configure {args} {
+  ::kbs::config::init {Require Source Configure} {Make Test Install Clean} $args
 }
 
 #-------------------------------------------------------------------------------
 
-proc kbs::test {args} {
-  ::config::init {Require Source Test} {Configure Make Install Clean} $args
+proc ::kbs::make {args} {
+  ::kbs::config::init {Require Source Configure Make} {Test Install Clean} $args
 }
 
 #-------------------------------------------------------------------------------
 
-proc kbs::install {args} {
-  ::config::init {Require Source Configure Make Install} {Test Clean} $args
+proc ::kbs::test {args} {
+  ::kbs::config::init {Require Source Test} {Configure Make Install Clean} $args
 }
 
 #-------------------------------------------------------------------------------
 
-proc kbs::clean {args} {
-  ::config::init {Clean} {Require Source Configure Make Test Install} $args
+proc ::kbs::install {args} {
+  ::kbs::config::init {Require Source Configure Make Install} {Test Clean} $args
 }
 
 #-------------------------------------------------------------------------------
 
-proc kbs::distclean {args} {
+proc ::kbs::clean {args} {
+  ::kbs::config::init {Clean} {Require Source Configure Make Test Install} $args
+}
+
+#-------------------------------------------------------------------------------
+
+proc ::kbs::distclean {args} {
   # Remove [Makedir] so everything will be rebuild again
-  set myBody [info body ::config::Source];# save old body
-  proc ::config::Source [info args ::config::Source] {
+  set myBody [info body ::kbs::config::Source];# save old body
+  proc ::kbs::config::Source [info args ::kbs::config::Source] {
     set myDir [Makedir tcl]
     if {[file exist $myDir]} {
       puts "=== Distclean: $myDir"
       file delete -force $myDir
     }
   }
-  ::config::init {Require Source} {Configure Make Test Install Clean} $args
-  proc ::config::Source [info args ::config::Source] $myBody;# restore old body
+  ::kbs::config::init {Require Source} {Configure Make Test Install Clean} $args
+  proc ::kbs::config::Source [info args ::kbs::config::Source] $myBody;# restore old body
 }
 
-#===============================================================================
+#===NAMESPACE===================================================================
 
-namespace eval config {
+namespace eval ::kbs::config {
 #
 # internal variables, at first because maindir is used later
 #
@@ -187,9 +210,6 @@ namespace eval config {
 ##@variable builddir
 ## Default building directory.
   variable builddir [file join $maindir build[string map {{ } {}} $::tcl_platform(os)]]
-##@variable sourcedir
-## Directory with all source distributions.
-  variable sourcedir [file join $maindir sources]
 ##@variable ignore
 ## If set (-i or -ignore switch) then proceed in case of errors.
   variable ignore 0
@@ -222,14 +242,14 @@ namespace eval config {
   set _(64BIT)       {--disable-64bit};# build without 64 bit support
   set _(TZDATA)      {--with-tzdata};# tcl
   set _(DIR) {unix};# configuration subdirectory
-  if {$::tcl_platform(platform) == "windows"} {
+  if {$::tcl_platform(platform) eq {windows}} {
     set _(DIR) {win}
   }
 
 }
 
 #-------------------------------------------------------------------------------
-proc config::init {used unused list} {
+proc ::kbs::config::init {used unused list} {
   variable packages
   variable package
   variable ignore
@@ -250,13 +270,13 @@ proc config::init {used unused list} {
   # create interpreter with available commands
   set interp [interp create]
   foreach myProc $procs {;# standard
-    interp alias $interp $myProc {} ::config::$myProc {}
+    interp alias $interp $myProc {} ::kbs::config::$myProc {}
   }
   foreach myProc $used {;# available commands
-    interp alias $interp $myProc {} ::config::$myProc
+    interp alias $interp $myProc {} ::kbs::config::$myProc
   }
   foreach myProc $unused {;# hidden commands
-    $interp eval [list proc $myProc [info args ::config::$myProc] {}]
+    $interp eval [list proc $myProc [info args ::kbs::config::$myProc] {}]
   }
   # now process command
   foreach myPattern $list {
@@ -293,7 +313,7 @@ proc config::init {used unused list} {
 ## * Make
 ## * Install
 ## * Clean
-proc config::Package {name script} {
+proc ::kbs::config::Package {name script} {
   variable packages
 
   if {[info exist packages($name)]} {
@@ -302,13 +322,13 @@ proc config::Package {name script} {
 }
 
 #-------------------------------------------------------------------------------
-##@proc config::Proc {name arglist body}
+##@proc ::kbs::config::Proc {name arglist body}
 ## The 'Proc' command define a procedure the same way as the 'proc' command.
 ## This procedure is then available in every 'Package' definition.
 ##@arg name    - name of the procedure
 ##@arg arglist - argument list of the procedure
 ##@arg body    - body of the procedure
-proc config::Proc {name arglist body} {
+proc ::kbs::config::Proc {name arglist body} {
   variable procs
   if {[string first : $name] != -1} {
     return -code error "wrong name of Proc: $name"
@@ -316,7 +336,7 @@ proc config::Proc {name arglist body} {
   if {[lsearch -exact $procs $name] != -1} {
     return -code error "Proc already exists: $name"
   }
-  proc ::config::$name $arglist $body
+  proc ::kbs::config::$name $arglist $body
   lappend procs $name
 }
 
@@ -324,7 +344,7 @@ proc config::Proc {name arglist body} {
 ##@proc Require {args}
 ## The given "Package"´s in args will be recursively called.
 ##@arg args - one or more "Package" names
-proc config::Require {args} {
+proc ::kbs::config::Require {args} {
   variable recursive
   if {$recursive == 0} return
 
@@ -365,7 +385,7 @@ proc config::Require {args} {
 #-------------------------------------------------------------------------------
 ##@proc Source {type args}
 ## Procedure to build source tree of current "Package" definition.
-##@arg pkg - name of package source dir under "-sourcedir"
+##@arg pkg - name of package source dir under "sources/"
 ##@arg type - describe action to get source tree of "Package"
 ## Available are:
 ##  cvs path ... - call 'cvs -d path ...'
@@ -373,21 +393,22 @@ proc config::Require {args} {
 ##  fetch path   - call 'http get path', unpack *.tar.gz or *.tgz files
 ##  tgz file     - call 'tar xzf file'
 ##  link path	 - use sources from "path"
-proc config::Source {type args} {
-  variable sourcedir
+proc ::kbs::config::Source {type args} {
   variable package
   variable srcdir
   variable maindir
 
+  set myDir [file join $maindir sources]
+  ::kbs::gui::state -running "" -package $package
   switch -- $type {
     script {
-      cd $sourcedir
-      set srcdir [file join $sourcedir [lindex $args 0]]
+      cd $myDir
+      set srcdir [file join $myDir [lindex $args 0]]
       if {![file exists $srcdir]} {
         eval [lindex $args 1]
       }
     } link {
-      set srcdir [file join $sourcedir $args]
+      set srcdir [file join $myDir $args]
       if {![file exists $srcdir]} {
         cd $maindir
         puts "=== Source link: $args"
@@ -401,37 +422,37 @@ proc config::Source {type args} {
         }
       }
     } cvs - svn - fetch - tgz {
-      set srcdir [file join $sourcedir $package]
+      set srcdir [file join $myDir $package]
       if {![file exists $srcdir]} {
         puts "=== Source eval: $package"
-        cd $sourcedir
+        cd $myDir
         eval [linsert $args 0 src-$type]
       }
     } default {
-      return -code error "wrong type \"$type\", should be link, csv, svn, fetch or tgz"
+      return -code error "wrong type \"$type\", should be link, cvs, svn, fetch or tgz"
     }
   }
 }
 
 #-------------------------------------------------------------------------------
-proc config::src-cvs {path args} {
-  if {$args eq ""} { set args [file tail $path] }
+proc ::kbs::config::src-cvs {path args} {
+  if {$args eq {}} { set args [file tail $path] }
   if {[string first @ $path] < 0} { set path :pserver:anonymous@$path }
   Run cvs -d $path -z3 co -P -d tmp {*}$args
   file rename tmp [Srcdir tcl]
 }
     
 #-------------------------------------------------------------------------------
-proc config::src-svn {path} {
+proc ::kbs::config::src-svn {path} {
   Run svn co $path [Srcdir sys]
 }
     
 #-------------------------------------------------------------------------------
-proc config::src-fetch {path} {
-  variable sourcedir
+proc ::kbs::config::src-fetch {path} {
   variable verbose
+  variable maindir
 
-  set file [file join $sourcedir [file tail $path]]
+  set file [file join $maindir sources [file tail $path]]
   package require http
   if {$verbose} {puts "  fetching $file"}
   set fd [open $file w]
@@ -461,7 +482,7 @@ proc config::src-fetch {path} {
       }
       file delete $file
     } *.kit {
-      if {$::tcl_platform(platform) eq "unix"} {
+      if {$::tcl_platform(platform) eq {unix}} {
         file attributes $file -permissions u+x
       }
     }
@@ -469,7 +490,7 @@ proc config::src-fetch {path} {
 }
 
 #-------------------------------------------------------------------------------
-proc config::src-tgz {file} {
+proc ::kbs::config::src-tgz {file} {
   file mkdir tmp
   cd tmp
   # use explicit gzip in case tar command doesn't understand the z flag
@@ -490,7 +511,7 @@ proc config::src-tgz {file} {
 }
 
 #-------------------------------------------------------------------------------
-proc config::src-zip {file} {
+proc ::kbs::config::src-zip {file} {
   file mkdir tmp
   cd tmp
   set r [catch {exec unzip [file normalize $file]} myMsg]
@@ -513,7 +534,7 @@ proc config::src-zip {file} {
 ##@proc Configure {script}
 ## If [Makedir] not exist create it and eval script.
 ##@arg script - tcl script to evaluate
-proc config::Configure {script} {
+proc ::kbs::config::Configure {script} {
   variable verbose
 
   set myDir [Makedir tcl]
@@ -527,7 +548,7 @@ proc config::Configure {script} {
 ##@proc Make {script}
 ## Eval script in [Makedir].
 ##@arg script - tcl script to evaluate
-proc config::Make {script} {
+proc ::kbs::config::Make {script} {
   variable verbose
 
   set myDir [Makedir tcl]
@@ -543,7 +564,7 @@ proc config::Make {script} {
 ##@proc Install {script}
 ## Eval script in [Makedir].
 ##@arg script - tcl script to evaluate
-proc config::Install {script} {
+proc ::kbs::config::Install {script} {
   variable verbose
 
   set myDir [Makedir tcl]
@@ -559,7 +580,7 @@ proc config::Install {script} {
 ##@proc Test {script}
 ## Eval script in [Makedir].
 ##@arg script - tcl script to evaluate
-proc config::Test {script} {
+proc ::kbs::config::Test {script} {
   variable verbose
 
   set myDir [Makedir tcl]
@@ -573,7 +594,7 @@ proc config::Test {script} {
 ##@proc Clean {script}
 ## Eval script in [Makedir].
 ##@arg script - tcl script to evaluate
-proc config::Clean {script} {
+proc ::kbs::config::Clean {script} {
   variable verbose
 
   set myDir [Makedir tcl]
@@ -586,12 +607,11 @@ proc config::Clean {script} {
 #-------------------------------------------------------------------------------
 ##@proc Srcdir {type}
 ## Return fully qualified path to current 'Package' source dir.
-## The parent dir can be set on the command line with '-sourcedir'.
 ##@par type: one of "tcl" used in tcl commands and "sys" used in system commands
-proc config::Srcdir {type} {
+proc ::kbs::config::Srcdir {type} {
   variable srcdir
 
-  if {$::tcl_platform(platform)=="windows" && $type == "sys" && [string index $srcdir 1]==":"} {
+  if {$::tcl_platform(platform) eq {windows} && $type eq {sys} && [string index $srcdir 1] eq {:}} {
     return /[string tolower [string index $srcdir 0]][string range $srcdir 2 end]
   }
   return $srcdir
@@ -602,7 +622,7 @@ proc config::Srcdir {type} {
 ## Return fully qualified path to current 'Package' make dir.
 ## Path is in dir [Builddir].
 ##@par type: one of "tcl" used in tcl commands and 'sys' used in system commands
-proc config::Makedir {type} {
+proc ::kbs::config::Makedir {type} {
     variable package
 
     return [file join [Builddir $type] $package]
@@ -614,9 +634,9 @@ proc config::Makedir {type} {
 ## and is used in the 'Install' target.
 ## The dir can be set on the command line with '-builddir'.
 ##@par type: one of 'tcl' used in tcl commands and 'sys' used in system commands
-proc config::Builddir {type} {
+proc ::kbs::config::Builddir {type} {
   variable builddir
-  if {$::tcl_platform(platform)=="windows" && $type == "sys" && [string index $builddir 1]==":"} {
+  if {$::tcl_platform(platform) eq {windows} && $type eq {sys} && [string index $builddir 1] eq {:}} {
     return "/[string tolower [string index $builddir 0]][string range $builddir 2 end]"
   }
   return $builddir
@@ -627,13 +647,16 @@ proc config::Builddir {type} {
 ##@proc Run {args}
 ## The procedure call the args as external command with options.
 ## The procedure is available in all script arguments.
-proc config::Run {args} {
+proc ::kbs::config::Run {args} {
   variable verbose
+
   if {$verbose} {
+    ::kbs::gui::state -running $args
     puts $args
     exec {*}$args >@stdout 2>@stderr
   } else {
-    if {$::tcl_platform(platform)=="windows"} {
+    ::kbs::gui::state;# keep gui alive
+    if {$::tcl_platform(platform) eq {windows}} {
       exec {*}$args >__dev__null__ 2>@stderr
     } else {
       exec {*}$args >/dev/null 2>@stderr
@@ -646,7 +669,7 @@ proc config::Run {args} {
 ## The procedure return the content of TCL* variables of the tclConfig.sh file.
 ## The variables are also available in the '_' array.
 ## The procedure is intended for use in the 'Configure' target.
-proc config::tclConfig {varname} {
+proc ::kbs::config::tclConfig {varname} {
   variable builddir
   variable tclConfig
   variable _
@@ -655,7 +678,7 @@ proc config::tclConfig {varname} {
     set myScript ""
     set myFd [open [file join $builddir lib tclConfig.sh] r]
     while {[gets $myFd myLine] != -1} {
-      if {[string range $myLine 0 2] == "TCL"} {
+      if {[string range $myLine 0 2] eq {TCL}} {
 	set myNr [string first = $myLine]
 	if {$myNr == -1} continue
 	append myScript "set _([string range $myLine 0 [expr {$myNr - 1}]]) "
@@ -675,7 +698,7 @@ proc config::tclConfig {varname} {
 ## The procedure return the content of TK* variables of the tkConfig.sh file.
 ## The variables are also available in the '_' array.
 ## The procedure is intended for use in the 'Configure' target.
-proc config::tkConfig {varname} {
+proc ::kbs::config::tkConfig {varname} {
   variable builddir
   variable tkConfig
   variable _
@@ -684,7 +707,7 @@ proc config::tkConfig {varname} {
     set myScript ""
     set myFd [open [file join $builddir lib tkConfig.sh] r]
     while {[gets $myFd myLine] != -1} {
-      if {[string range $myLine 0 1] == "TK"} {
+      if {[string range $myLine 0 1] eq {TK}} {
 	set myNr [string first = $myLine]
 	if {$myNr == -1} continue
 	append myScript "set _([string range $myLine 0 [expr {$myNr - 1}]]) "
@@ -715,7 +738,7 @@ proc config::tkConfig {varname} {
 ##@arg args: additional args
 ##           - list of libraries in 'make' and 'clean' mode.
 ##           - kit command line arguments in 'run' mode.
-proc config::Kit {mode name args} {
+proc ::kbs::config::Kit {mode name args} {
   switch -- $mode {
     make {
       set myName ${name}.vfs
@@ -724,7 +747,7 @@ proc config::Kit {mode name args} {
       Run ln -s [Srcdir sys] $myName
       file mkdir $myName/lib
       foreach myPath [glob -nocomplain $myName/lib/*] {;# remove all links
-        if {[file type $myPath] == "link"} {
+        if {[file type $myPath] eq {link}} {
           file delete -force $myPath
         }
       }
@@ -742,7 +765,7 @@ proc config::Kit {mode name args} {
     }
     clean {
       foreach myFile [glob -nocomplain ${name}.vfs/lib/*] {
-        if {[file type $myFile] == "link"} { 
+        if {[file type $myFile] eq {link}} { 
           file delete -force $myFile
         }
       }
@@ -758,10 +781,10 @@ proc config::Kit {mode name args} {
 }
 
 #-------------------------------------------------------------------------------
-##@proc config::Tcl {{package {}}}
+##@proc ::kbs::config::Tcl {{package {}}}
 ##@arg package: install name of package, if missing then build from [Srcdir tcl]
-proc config::Tcl {{package {}}} {
-  if {$package == {}} {
+proc ::kbs::config::Tcl {{package {}}} {
+  if {$package eq {}} {
     set myDst [file join [Builddir tcl] lib [file tail [Srcdir tcl]]]
   } else {
     set myDst [file join [Builddir tcl] lib $package]
@@ -770,7 +793,7 @@ proc config::Tcl {{package {}}} {
   file copy -force [Srcdir tcl] $myDst
   if {![file exists [file join $myDst pkgIndex.tcl]]} {
     foreach {myPkg myVer} [split [file tail $myDst] -] break;
-    if {$myVer == {}} {set myVer 0.0}
+    if {$myVer eq {}} {set myVer 0.0}
     set myRet "package ifneeded $myPkg $myVer \"\n"
     foreach myFile [glob -tails -directory $myDst *.tcl] {
       append myRet "  source \[file join \$dir $myFile\]\n"
@@ -782,12 +805,12 @@ proc config::Tcl {{package {}}} {
 }
 
 #-------------------------------------------------------------------------------
-##@proc config::Patch {file lineoffset oldtext newtext}
+##@proc ::kbs::config::Patch {file lineoffset oldtext newtext}
 ##@arg file: name of file to patch
 ##@arg lineoffset: start point of patch, first line is 1
 ##@arg oldtext: part of file to replace
 ##@arg newtext: replacement text
-proc config::Patch {file lineoffset oldtext newtext} {
+proc ::kbs::config::Patch {file lineoffset oldtext newtext} {
   variable verbose
 
   set myFd [open $file r]
@@ -828,12 +851,11 @@ proc config::Patch {file lineoffset oldtext newtext} {
 }
 
 #-------------------------------------------------------------------------------
-##@proc config::configure {args}
+##@proc ::kbs::config::configure {args}
 ##@arg args: option list
-proc config::configure {args} {
+proc ::kbs::config::configure {args} {
   variable maindir
   variable builddir
-  variable sourcedir
   variable pkgfile
   variable ignore
   variable recursive
@@ -844,25 +866,22 @@ proc config::configure {args} {
   set myIndex 0
   foreach myCmd $args {
     switch -glob -- $myCmd {
-      -builddir=* {
+      -pkgfile=* {
+        set myPkgfile [file normalize [string range $myCmd 9 end]]
+      } -builddir=* {
 	set myFile [file normalize [string range $myCmd 10 end]]
         set builddir $myFile
-      } -sourcedir=* {
-        set myFile [file normalize [string range $myCmd 11 end]]
-        set sourcedir $myFile
-      } -pkgfile=* {
-        set myPkgfile [file normalize [string range $myCmd 9 end]]
+      } -CC=* {
+        set _(CC) [string range $myCmd 4 end]
       } -i - -ignore {
         set ignore 1
       } -r - -recursive {
         set recursive 1
       } -v - -verbose {
 	set verbose 1
-      } --CC=* {
-        set _(CC) [string range $myCmd 5 end]
       } --enable-symbols - --disable-symbols {
         set _(SYMBOLS) $myCmd
-      } --enable-64bit - --disable-64bit - --enable-64bit-vis {
+      } --enable-64bit - --disable-64bit {;#TODO --enable-64bit-vis
         set _(64BIT) $myCmd
       } --enable-threads - --disable-threads {
         set _(THREADS) $myCmd
@@ -877,9 +896,9 @@ proc config::configure {args} {
     }
     incr myIndex
   }
-  file mkdir $builddir $sourcedir
-  if {$myPkgfile == "" && $pkgfile == ""} {
-    set myPkgfile [file join $maindir sources kbskit-0.1 kbskit.kbs]
+  file mkdir $builddir [file join $maindir sources]
+  if {$myPkgfile eq {} && $pkgfile eq {}} {
+    set myPkgfile [file join $maindir sources kbskit-8.5b3 kbskit.kbs]
   }
   if {$myPkgfile != ""} {
     puts "=== Read definitions from $myPkgfile"
@@ -889,35 +908,256 @@ proc config::configure {args} {
   return $args
 }
 
-#-------------------------------------------------------------------------------
-# now process the command line to call one of the '::kbs::*' procs
-proc kbs_main {argv} {
-  # parse options
-  set argv [::config::configure {*}$argv]
-  # try to execute command
-  set cmd [lindex $argv 0]
-  if {[info commands ::kbs::$cmd] ne ""} {
-    if {[catch {::kbs::$cmd {*}[lrange $argv 1 end]} myMsg]} {
-      puts stderr "Error in execution of \"$cmd [lrange $argv 1 end]\":\n$myMsg"
-      exit 1
-    }
-  } elseif {$cmd eq ""} {
-    ::kbs::help
-  } else {
-    set cmdlist {}
-    foreach knowncmd [lsort [info commands ::kbs::*]] {
-      lappend cmdlist [namespace tail $knowncmd]
-    }
-    puts stderr "'$cmd' not found, should be one of: [join $cmdlist {, }]"
-    exit 1
-  }
-  exit 0
+#===NAMESPACE===================================================================
+
+namespace eval ::kbs::gui {
+  variable _
+
+  set _(-command) {}
+  set _(-package) {}
+  set _(-running) {}
+  set _(widgets) [list];# list of widgets to disable if command is running
 }
 
-#===============================================================================
+#-------------------------------------------------------------------------------
 
-#===============================================================================
+proc ::kbs::gui::init {args} {
+  variable _
+
+  package require Tk
+
+  grid rowconfigure . 4 -weight 1
+  grid columnconfigure . 1 -weight 1
+
+  # variables
+  set w .var
+  grid [::ttk::labelframe $w -text {Option variables} -padding 3]\
+	-row 1 -column 1 -sticky ew
+  grid columnconfigure $w 2 -weight 1
+
+  grid [::ttk::label $w.1 -anchor e -text {-pkgfile=}]\
+	-row 1 -column 1 -sticky ew
+  grid [::ttk::label $w.2 -anchor w -relief ridge -textvariable ::kbs::config::pkgfile]\
+	-row 1 -column 2 -sticky ew
+
+  grid [::ttk::label $w.4 -anchor e -text {-builddir=}]\
+	-row 2 -column 1 -sticky ew
+  grid [::ttk::label $w.5 -anchor w -relief ridge -textvariable ::kbs::config::builddir]\
+	-row 2 -column 2 -sticky ew
+  grid [::ttk::button $w.6 -width 3 -text {...} -command {::kbs::gui::setdir builddir} -padding 0]\
+	-row 2 -column 3 -sticky ew
+
+  grid [::ttk::label $w.7 -anchor e -text {-CC=}]\
+	-row 3 -column 1 -sticky ew
+  grid [::ttk::entry $w.8 -textvariable ::kbs::config::_(CC)]\
+	-row 3 -column 2 -sticky ew
+  grid [::ttk::button $w.9 -width 3 -text {...} -command {::kbs::gui::setcc} -padding 0]\
+	-row 3 -column 3 -sticky ew
+
+  lappend _(widgets) $w.6 $w.8 $w.9
+
+  # select options
+  set w .sel
+  grid [::ttk::labelframe $w -text {Select options} -padding 3]\
+	-row 2 -column 1 -sticky ew
+  grid columnconfigure $w 1 -weight 1
+  grid columnconfigure $w 2 -weight 1
+  grid columnconfigure $w 3 -weight 1
+
+  grid [::ttk::checkbutton $w.1 -text -ignore -onvalue 1 -offvalue 0 -variable ::kbs::config::ignore]\
+	-row 1 -column 1 -sticky ew
+  grid [::ttk::checkbutton $w.2 -text -recursive -onvalue 1 -offvalue 0 -variable ::kbs::config::recursive]\
+	-row 1 -column 2 -sticky ew
+  grid [::ttk::checkbutton $w.3 -text -verbose -onvalue 1 -offvalue 0 -variable ::kbs::config::verbose]\
+	-row 1 -column 3 -sticky ew
+
+  lappend _(widgets) $w.1 $w.2 $w.3
+
+  # toggle options
+  set w .tgl
+  grid [::ttk::labelframe $w -text {Toggle options} -padding 3]\
+	-row 3 -column 1 -sticky ew
+  grid columnconfigure $w 1 -weight 1
+  grid columnconfigure $w 2 -weight 1
+  grid columnconfigure $w 3 -weight 1
+
+  grid [::ttk::label $w.1 -text AQUA= -anchor e]\
+	-row 2 -column 1 -sticky ew
+  grid [::ttk::checkbutton $w.2 -width 17 -onvalue --enable-aqua -offvalue --disable-aqua -variable ::kbs::config::_(AQUA) -textvariable ::kbs::config::_(AQUA)]\
+	-row 2 -column 2 -sticky ew
+  grid [::ttk::label $w.3 -text SYMBOLS= -anchor e]\
+	-row 2 -column 3 -sticky ew
+  grid [::ttk::checkbutton $w.4 -width 17 -onvalue --enable-symbols -offvalue --disable-symbols -variable ::kbs::config::_(SYMBOLS) -textvariable ::kbs::config::_(SYMBOLS)]\
+	-row 2 -column 4 -sticky ew
+  grid [::ttk::label $w.5 -text 64BIT= -anchor e]\
+	-row 3 -column 1 -sticky ew
+  grid [::ttk::checkbutton $w.6 -width 17 -onvalue --enable-64bit -offvalue --disable-64bit -variable ::kbs::config::_(64BIT) -textvariable ::kbs::config::_(64BIT)]\
+	-row 3 -column 2 -sticky ew
+  grid [::ttk::label $w.7 -text THREADS= -anchor e]\
+	-row 3 -column 3 -sticky ew
+  grid [::ttk::checkbutton $w.8 -width 17 -onvalue --enable-threads -offvalue --disable-threads -variable ::kbs::config::_(THREADS) -textvariable ::kbs::config::_(THREADS)]\
+	-row 3 -column 4 -sticky ew
+
+  lappend _(widgets) $w.2 $w.4 $w.6 $w.8
+
+  # packages
+  set w .pkg
+  grid [::ttk::labelframe $w -text {Available Packages} -padding 3]\
+	-row 4 -column 1 -sticky ew
+  grid rowconfigure $w 1 -weight 1
+  grid columnconfigure $w 1 -weight 1
+
+  grid [::listbox $w.lb -yscrollcommand "$w.2 set" -selectmode single]\
+	-row 1 -column 1 -sticky nesw
+  eval $w.lb insert end [lsort -dict [array names ::kbs::config::packages]]
+  grid [::ttk::scrollbar $w.2 -orient vertical -command "$w.lb yview"]\
+	-row 1 -column 2 -sticky ns
+
+  # commands
+  set w .cmd
+  grid [::ttk::labelframe $w -text Commands -padding 3]\
+	-row 5 -column 1 -sticky ew
+  grid columnconfigure $w 1 -weight 1
+  grid columnconfigure $w 2 -weight 1
+  grid columnconfigure $w 3 -weight 1
+  grid columnconfigure $w 4 -weight 1
+  grid [::ttk::button $w.1 -text sources -command {::kbs::gui::command sources}]\
+	-row 1 -column 1 -sticky ew
+  grid [::ttk::button $w.2 -text configure -command {::kbs::gui::command configure}]\
+	-row 1 -column 2 -sticky ew
+  grid [::ttk::button $w.3 -text make -command {::kbs::gui::command make}]\
+	-row 1 -column 3 -sticky ew
+  grid [::ttk::button $w.4 -text install -command {::kbs::gui::command install}]\
+	-row 1 -column 4 -sticky ew
+  grid [::ttk::button $w.5 -text test -command {::kbs::gui::command test}]\
+	-row 2 -column 1 -sticky ew
+  grid [::ttk::button $w.6 -text clean -command {::kbs::gui::command clean}]\
+	-row 2 -column 2 -sticky ew
+  grid [::ttk::button $w.7 -text distclean -command {::kbs::gui::command distclean}]\
+	-row 2 -column 3 -sticky ew
+  grid [::ttk::button $w.8 -text EXIT -command {exit}]\
+	-row 2 -column 4 -sticky ew
+
+  lappend _(widgets) $w.1 $w.2 $w.3 $w.4 $w.5 $w.6 $w.7 $w.8
+
+  # status
+  set w .state
+  grid [::ttk::labelframe $w -text {Status messages} -padding 3]\
+	-row 6 -column 1 -sticky ew
+  grid columnconfigure $w 2 -weight 1
+
+  grid [::ttk::label $w.1_1 -anchor w -text Command:]\
+	-row 1 -column 1 -sticky ew
+  grid [::ttk::label $w.1_2 -anchor w -relief sunken -textvariable ::kbs::gui::_(-command)]\
+	-row 1 -column 2 -sticky ew
+  grid [::ttk::label $w.2_1 -anchor w -text Package:]\
+	-row 2 -column 1 -sticky ew
+  grid [::ttk::label $w.2_2 -anchor w -relief sunken -textvariable ::kbs::gui::_(-package)]\
+	-row 2 -column 2 -sticky nesw
+  grid [::ttk::label $w.3_1 -anchor w -text Running:]\
+	-row 3 -column 1 -sticky ew
+  grid [::ttk::label $w.3_2 -anchor w -relief sunken -textvariable ::kbs::gui::_(-running) -wraplength 300]\
+	-row 3 -column 2 -sticky ew
+
+  wm title . "Kitgen build system ([::kbs::version])"
+  wm protocol . WM_DELETE_WINDOW {exit}
+  wm deiconify .
+}
+
+#-------------------------------------------------------------------------------
+
+proc ::kbs::gui::setdir {varname} {
+  set myDir [tk_chooseDirectory -parent . -title "Directory -$varname"\
+	-initialdir [subst \$::kbs::config::$varname]]
+  if {$myDir eq {}} return
+  file mkdir $myDir
+  set ::kbs::config::$varname $myDir
+}
+
+#-------------------------------------------------------------------------------
+
+proc ::kbs::gui::setcc {} {
+  set myFile [tk_getOpenFile -parent . -title "Select C-compiler"\
+	-initialdir [file dirname $::kbs::config::_(CC)]]
+  if {$myFile eq {}} return
+  set ::kbs::config::_(CC) $myFile
+}
+
+#-------------------------------------------------------------------------------
+
+proc ::kbs::gui::command {cmd} {
+  variable _
+
+  set mySelection [.pkg.lb curselection]
+  if {[llength $mySelection] == 0} {
+    tk_messageBox -parent . -type ok -title {No selection} -message {Please select at least one package from the list.}
+    return
+  }
+  foreach myW $_(widgets) { $myW configure -state disabled }
+  set myTarget [.pkg.lb get $mySelection]
+  ::kbs::gui::state -running "" -package "" -command "'$cmd $myTarget' ..."
+  if {[catch {console show}]} {
+    set myCmd "::kbs::$cmd $myTarget"
+  } else {
+    set myCmd "consoleinterp eval ::kbs::$cmd $myTarget"
+  }
+  if {[catch {{*}$myCmd} myMsg]} {
+    tk_messageBox -parent . -type ok -title {Execution failed} -message "\"$cmd $myTarget\" failed!\n$myMsg" -icon error
+    ::kbs::gui::state -command "'$cmd $myTarget' failed!"
+  } else {
+    tk_messageBox -parent . -type ok -title {Execution finished} -message "\"$cmd $myTarget\" successfull." -icon info
+    ::kbs::gui::state -running "" -package "" -command "'$cmd $myTarget' done."
+  }
+  foreach myW $_(widgets) { $myW configure -state normal }
+}
+
+#-------------------------------------------------------------------------------
+
+##@proc ::kbs::gui::state {args}}
+##@arg args: list of option-value pairs with:
+##  -running 'text' - text to display in the 'Running:' state
+##  -package 'text' - text to display in the 'Package:' state
+##  -command 'text' - text to display in the 'Command:' state
+proc ::kbs::gui::state {args} {
+  variable _
+
+  array set _ $args
+  update
+}
+
+#===STARTUP=====================================================================
+
+#-------------------------------------------------------------------------------
+##@proc ::kbs_main {argv}
+## Process the command line to call one of the '::kbs::*' procs
+proc ::kbs_main {argv} {
+  # parse options
+  set argv [::kbs::config::configure {*}$argv]
+  # try to execute command
+  set myCmd [lindex $argv 0]
+  if {[info commands ::kbs::$myCmd] ne ""} {
+    if {[catch {::kbs::$myCmd {*}[lrange $argv 1 end]} myMsg]} {
+      puts stderr "Error in execution of \"$myCmd [lrange $argv 1 end]\":\n$myMsg"
+      exit 1
+    }
+    if {$myCmd != "gui"} {
+      exit 0
+    }
+  } elseif {$myCmd eq {}} {
+    ::kbs::help
+    exit 0
+  } else {
+    set myList {}
+    foreach myKnownCmd [lsort [info commands ::kbs::*]] {
+      lappend myList [namespace tail $myKnownCmd]
+    }
+    puts stderr "'$myCmd' not found, should be one of: [join $myList {, }]"
+    exit 1
+  }
+}
+
+#-------------------------------------------------------------------------------
 # start application
 if {[info exists argv0] && [file tail [info script]] eq [file tail $argv0]} {
-  kbs_main $argv
+  ::kbs_main $argv
 }
