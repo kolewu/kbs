@@ -18,10 +18,10 @@ esac ;\
 if test ! -d sources ; then mkdir sources; fi;\
 if test ! -x ${EXE} ; then \
   if test ! -d sources/tcl-8.5 ; then \
-    ( cd sources && cvs -d :pserver:anonymous@tcl.cvs.sourceforge.net:/cvsroot/tcl -z3 co -r core-8-5-b3 tcl && mv tcl tcl-8.5 ) ;\
+    ( cd sources && cvs -d :pserver:anonymous@tcl.cvs.sourceforge.net:/cvsroot/tcl -z3 co -r core-8-5-0 tcl && mv tcl tcl-8.5 ) ;\
   fi ;\
   if test ! -d sources/tk-8.5 ; then \
-    ( cd sources && cvs -d :pserver:anonymous@tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -z3 co -r core-8-5-b3 tk && mv tk tk-8.5 ) ;\
+    ( cd sources && cvs -d :pserver:anonymous@tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -z3 co -r core-8-5-0 tk && mv tk tk-8.5 ) ;\
   fi ;\
   mkdir -p ${PREFIX}/tcl ;\
   ( cd ${PREFIX}/tcl && ../../sources/tcl-8.5/${DIR}/configure --disable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} && make install-binaries install-libraries ) ;\
@@ -29,8 +29,8 @@ if test ! -x ${EXE} ; then \
   mkdir -p ${PREFIX}/tk ;\
   ( cd ${PREFIX}/tk && ../../sources/tk-8.5/${DIR}/configure --enable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} --with-tcl=${PREFIX}/lib && make install-binaries install-libraries ) ;\
 fi ;\
-if test ! -d sources/kbskit-8.5b3 ; then\
-  ( cd sources && cvs -d :pserver:anonymous@kbskit.cvs.sourceforge.net:/cvsroot/kbskit -z3 co kbskit && mv kbskit kbskit-8.5b3) ;\
+if test ! -d sources/kbskit-8.5 ; then\
+  ( cd sources && cvs -d :pserver:anonymous@kbskit.cvs.sourceforge.net:/cvsroot/kbskit -z3 co kbskit && mv kbskit kbskit-8.5) ;\
 fi ;\
 exec ${EXE} "$0" ${1+"$@"}
 #===============================================================================
@@ -49,7 +49,7 @@ proc ::kbs::help {} {
   puts {kbs.tcl ?options? mode ?args?
 options:
   -pkgfile=?file?      contain used Package definitions
-                       (default is 'sources/kbskit-8.5b3/kbskit.kbs')
+                       (default is 'sources/kbskit-8.5/kbskit.kbs')
   -builddir=?dir?      build directory, used with [Builddir]
                        (default is './build$tcl_platform(os)')
   -CC=?command?        set configuration variable _(CC)
@@ -898,7 +898,7 @@ proc ::kbs::config::configure {args} {
   }
   file mkdir $builddir [file join $maindir sources]
   if {$myPkgfile eq {} && $pkgfile eq {}} {
-    set myPkgfile [file join $maindir sources kbskit-8.5b3 kbskit.kbs]
+    set myPkgfile [file join $maindir sources kbskit-8.5 kbskit.kbs]
   }
   if {$myPkgfile != ""} {
     puts "=== Read definitions from $myPkgfile"
