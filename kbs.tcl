@@ -89,7 +89,9 @@ The following configuration variables can be used:}
 #-------------------------------------------------------------------------------
 
 proc ::kbs::version {} {
-  return [lindex {$Revision$} 1]
+  set myVersion "0.2 [string trim {$Revision$} \$]"
+  if {$::kbs::config::verbose} {puts "Version: $myVersion"}
+  return $myVersion
 }
 
 #-------------------------------------------------------------------------------
