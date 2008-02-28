@@ -18,10 +18,10 @@ esac ;\
 if test ! -d sources ; then mkdir sources; fi;\
 if test ! -x ${EXE} ; then \
   if test ! -d sources/tcl-8.5 ; then \
-    ( cd sources && cvs -d :pserver:anonymous@tcl.cvs.sourceforge.net:/cvsroot/tcl -z3 co -r core-8-5-0 tcl && mv tcl tcl-8.5 ) ;\
+    ( cd sources && cvs -d :pserver:anonymous@tcl.cvs.sourceforge.net:/cvsroot/tcl -z3 co -r core-8-5-1 tcl && mv tcl tcl-8.5 ) ;\
   fi ;\
   if test ! -d sources/tk-8.5 ; then \
-    ( cd sources && cvs -d :pserver:anonymous@tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -z3 co -r core-8-5-0 tk && mv tk tk-8.5 ) ;\
+    ( cd sources && cvs -d :pserver:anonymous@tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -z3 co -r core-8-5-1 tk && mv tk tk-8.5 ) ;\
   fi ;\
   mkdir -p ${PREFIX}/tcl ;\
   ( cd ${PREFIX}/tcl && ../../sources/tcl-8.5/${DIR}/configure --disable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} && make install-binaries install-libraries ) ;\
@@ -89,7 +89,7 @@ The following configuration variables can be used:}
 #-------------------------------------------------------------------------------
 
 proc ::kbs::version {} {
-  set myVersion "0.2 [string trim {$Revision$} \$]"
+  set myVersion "0.2.1 [string trim {$Revision$} \$]"
   if {$::kbs::config::verbose} {puts "Version: $myVersion"}
   return $myVersion
 }

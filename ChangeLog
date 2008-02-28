@@ -1,3 +1,9 @@
+2008-02-28  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.2.1
+	* kbs/kbs.tcl: changes for tcl/tk 8.5.1
+	* kbskit/kbskit.kbs: changed package versions
+	- tcl/tk 8.5.1
+	- ral 0.8.7 (also now included in kbspkg85.kit)
 2008-01-04  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.2.
 	* kbs/kbs.tcl: changes for tcl/tk 8.5.0
