@@ -30,7 +30,7 @@ if test ! -x ${EXE} ; then \
   ( cd ${PREFIX}/tk && ../../sources/tk-8.5/${DIR}/configure --enable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} --with-tcl=${PREFIX}/lib && make install-binaries install-libraries ) ;\
 fi ;\
 if test ! -d sources/kbskit-8.5 ; then\
-  ( cd sources && cvs -d :pserver:anonymous@kbskit.cvs.sourceforge.net:/cvsroot/kbskit -z3 co kbskit && mv kbskit kbskit-8.5) ;\
+  ( cd sources && cvs -d :pserver:anonymous@kbskit.cvs.sourceforge.net:/cvsroot/kbskit -z3 co -r kbskit_0_2_2 kbskit && mv kbskit kbskit-8.5) ;\
 fi ;\
 exec ${EXE} "$0" ${1+"$@"}
 #===============================================================================
