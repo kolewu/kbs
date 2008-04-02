@@ -1,3 +1,11 @@
+2008-04-02  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.2.2
+	* kbs/kbs.tcl: changes for tcl/tk 8.5.2
+	* kbskit/kbskit.kbs: added
+	- itcl-3.4, itk-3.4, iwidgets-4.0.2
+	* kbskit/kbskit.kbs: changed
+	- tcl/tk 8.5.2
+	- sqlite 3.5.7
 2008-02-28  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.2.1
 	* kbs/kbs.tcl: changes for tcl/tk 8.5.1
