@@ -1,3 +1,22 @@
+2008-07-02  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.2.3
+	* kbs/kbs.tcl:
+	- changes for tcl/tk 8.5.3
+	- Used 'robodoc' documentation strings
+	- removed 'kbs' function to display internal documentation
+	- new 'doc' function to create internal documantation
+	- Enhanced 'Kit' function (starpack, main.tcl creation)
+	* kbskit/kbskit.kbs: added
+	- tcl/tk 8.6a1
+	- tcloo-0.4 (also now included in kbspkg85.kit)
+	- robodoc 4.99.36
+	* kbskit/kbskit.kbs: changed
+	- tcl/tk 8.5.3
+	- xotcl 1.6.0
+	- gridplus 2.3
+	- ral 0.8.8
+	- tablelist 4.9
+	- sqlite 3.5.9
 2008-04-02  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.2.2
 	* kbs/kbs.tcl: changes for tcl/tk 8.5.2

@@ -1,4 +1,4 @@
-kbs -- kitgen build system (version 0.2.2 for tcl/tk 8.5.2)
+kbs -- kitgen build system (version 0.2.3 for tcl/tk 8.5.2)
 ==========================
 
 The system can generate [Tclkit Lite] executables and Tcl packages for
@@ -15,29 +15,29 @@ Sources are available from <http://sourceforge.net/projects/kbskit>
   kbskit*dyn* - tk dynamic loadable
   kbskit*gui* - tk static inserted
   kbspkg85.kit with:
-    bwidget-1.8.0 gridplus-2.2 icons-1.2 Img1.3 itcl3.4 itk3.4 iwidgets4.0.2
-    Memchan2.2.1 mentry-3.1 ral0.8.7 sqlite3.5.7 tablelist-4.8 tcllib1.10
-    tclx8.4 tdom0.8.2 thread2.6.5 tkcon tklib0.4 Tktable2.9 treectrl2.2.3
-    trofs0.4.4 udp1.0.8 wcb-3.1 xotcl1.5.6
-  tksqlite.kit - ready to run sqlite table editor
+    bwidget-1.8.0 gridplus-2.3 icons-1.2 Img1.3 itcl3.4 itk3.4 iwidgets4.0.2
+    Memchan2.2.1 mentry-3.1 ral0.8.8 sqlite3.5.9 tablelist-4.9 tcllib1.10
+    TclOO0.4 tclx8.4 tdom0.8.2 thread2.6.5 tkcon tklib0.4 Tktable2.9
+    treectrl2.2.3 trofs0.4.4 udp1.0.8 wcb-3.1 xotcl1.6.0
+  tksqlite    - ready to run sqlite table editor
 
 Quick start
 -----------
    * Build executables:
   ./kbs.tcl -r install kbskit-8.5
-   * Build kit-files:
-  ./kbs.tcl -r install kbspkg-8.5
   ./kbs.tcl -r install tksqlite-0.5.6
+   * Build kit-file:
+  ./kbs.tcl -r install kbspkg-8.5
    * Start graphical user interface:
   ./kbs.tcl gui
    * Display online help:
   ./kbs.tcl
-=== Read definitions from /home/rene/kbs/sources/kbskit-8.5.1/kbskit.kbs
-Kitgen Build System ()
+=== Read definitions from /home/rene/kbs/sources/kbskit-8.5/kbskit.kbs
+Kitgen Build System (0.2.3 Revision: 1.9)
 kbs.tcl ?options? mode ?args?
 options:
   -pkgfile=?file?      contain used Package definitions
-                       (default is 'sources/kbskit-8.5.1/kbskit.kbs')
+                       (default is 'sources/kbskit-8.5/kbskit.kbs')
   -builddir=?dir?      build directory, used with [Builddir]
                        (default is './build$tcl_platform(os)')
   -CC=?command?        set configuration variable _(CC)
@@ -56,7 +56,7 @@ options:
  mode:
   help                 this text
   version              return current version
-  kbs                  return information about *.kbs commands
+  doc                  create documentation
   gui                  start graphical user interface
   list ?pattern?       list packages matching pattern (default is *)
   require package ..   return call trace of packages
