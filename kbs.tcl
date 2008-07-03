@@ -1165,6 +1165,8 @@ proc ::kbs::config::tkConfig {varname} {
 # SYNOPSIS
 proc ::kbs::config::Kit {mode name args} {
 # SOURCE
+  variable _
+
   switch -- $mode {
     configure {
       if {[file exists [file join [Srcdir sys] main.tcl]]} {
@@ -1196,6 +1198,19 @@ if {[catch {
       if {[file exists main.tcl]} {
         file copy main.tcl $myVfs
       }
+      foreach myPath [glob -nocomplain -directory [Srcdir tcl] -tails *] {
+        if {$myPath eq {lib}} continue
+	puts $myPath
+        Run ln -s [file join [Srcdir sys] $myPath] [file join $myVfs $myPath]
+      }
+      foreach myPath [glob -nocomplain -directory [Srcdir tcl] -tails lib/*] {
+        Run ln -s [file join [Srcdir sys] $myPath] [file join $myVfs $myPath]
+      }
+      foreach myPath $args {
+        Run ln -s [file join [Builddir sys] lib $myPath]\
+		[file join $myVfs lib [file tail $myPath]]
+      }
+if 0 {
       foreach myPath [glob -nocomplain [file join [Srcdir sys] *]] {
         if {[file tail $myPath] eq {lib}} continue
         Run ln -s $myPath [file join $myVfs [file tail $myPath]]
@@ -1207,6 +1222,7 @@ if {[catch {
         Run ln -s [file join [Builddir sys] lib $myPath]\
 		[file join $myVfs lib [file tail $myPath]]
       }
+}
     }
     install {
       set myCli [glob [file join [Builddir tcl] bin kbskit8*cli*]]
@@ -1216,17 +1232,20 @@ if {[catch {
       if {$args eq {}} {
         Run $myCli $mySdx wrap $name
         file rename -force $name [file join [Builddir tcl] bin $name.kit]
-      } elseif {$args eq {-cli}} {
+	return
+      }
+      if {$args eq {-cli}} {
         Run $myDyn $mySdx wrap $name -runtime $myCli
-        file rename -force $name [file join [Builddir tcl] bin]
       } elseif {$args eq {-dyn}} {
         Run $myCli $mySdx wrap $name -runtime $myDyn
-        file rename -force $name [file join [Builddir tcl] bin]
       } elseif {$args eq {-gui}} {
         Run $myCli $mySdx wrap $name -runtime $myGui
-        file rename -force $name [file join [Builddir tcl] bin]
       } else {
         Run $myCli $mySdx wrap $name -runtime {*}$args
+      }
+      if {$_(DIR) eq {win}} {
+        file rename -force $name [file join [Builddir tcl] bin $name.exe]
+      } else {
         file rename -force $name [file join [Builddir tcl] bin]
       }
     }
