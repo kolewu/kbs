@@ -28,10 +28,10 @@ esac ;\
 if test ! -d sources ; then mkdir sources; fi;\
 if test ! -x ${EXE} ; then \
   if test ! -d sources/tcl-8.5 ; then \
-    ( cd sources && cvs -d :pserver:anonymous@tcl.cvs.sourceforge.net:/cvsroot/tcl -z3 co -r core-8-5-3 tcl && mv tcl tcl-8.5 ) ;\
+    ( cd sources && cvs -d :pserver:anonymous@tcl.cvs.sourceforge.net:/cvsroot/tcl -z3 co -r core-8-5-4 tcl && mv tcl tcl-8.5 ) ;\
   fi ;\
   if test ! -d sources/tk-8.5 ; then \
-    ( cd sources && cvs -d :pserver:anonymous@tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -z3 co -r core-8-5-3 tk && mv tk tk-8.5 ) ;\
+    ( cd sources && cvs -d :pserver:anonymous@tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -z3 co -r core-8-5-4 tk && mv tk tk-8.5 ) ;\
   fi ;\
   mkdir -p ${PREFIX}/tcl ;\
   ( cd ${PREFIX}/tcl && ../../sources/tcl-8.5/${DIR}/configure --disable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} && make install-binaries install-libraries ) ;\
@@ -40,7 +40,7 @@ if test ! -x ${EXE} ; then \
   ( cd ${PREFIX}/tk && ../../sources/tk-8.5/${DIR}/configure --enable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} --with-tcl=${PREFIX}/lib && make install-binaries install-libraries ) ;\
 fi ;\
 if test ! -d sources/kbskit-8.5 ; then\
-  ( cd sources && cvs -d :pserver:anonymous@kbskit.cvs.sourceforge.net:/cvsroot/kbskit -z3 co -r kbskit_0_2_3 kbskit && mv kbskit kbskit-8.5) ;\
+  ( cd sources && cvs -d :pserver:anonymous@kbskit.cvs.sourceforge.net:/cvsroot/kbskit -z3 co -r kbskit_0_2_4 kbskit && mv kbskit kbskit-8.5) ;\
 fi ;\
 exec ${EXE} "$0" ${1+"$@"}
 #===============================================================================
@@ -121,7 +121,7 @@ The following configuration variables can be used:}
 # SYNOPSIS
 proc ::kbs::version {{print 1}} {
 # SOURCE
-  set myVersion "0.2.3 [string trim {$Revision$} \$]"
+  set myVersion "0.2.4 [string trim {$Revision$} \$]"
   if {$print || $::kbs::config::verbose} {puts "Version: $myVersion"}
   return $myVersion
 }

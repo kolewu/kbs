@@ -1,3 +1,11 @@
+2008-08-27  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.2.4
+	* kbs/kbs.tcl:
+	- changes for tcl/tk 8.5.4 and kbskit 0.2.4
+	* kbskit/kbskit.kbs: changed
+	- tcl/tk 8.6a2
+	- tcl/tk 8.5.4
+	- xotcl 1.6.1
 2008-07-02  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.2.3
 	* kbs/kbs.tcl:
