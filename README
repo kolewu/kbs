@@ -16,7 +16,7 @@ Sources are available from <http://sourceforge.net/projects/kbskit>
   kbskit*gui* - tk static inserted
   kbspkg85.kit with:
     bwidget-1.8.0 gridplus-2.3 icons-1.2 Img1.3 itcl3.4 itk3.4 iwidgets4.0.2
-    Memchan2.2.1 mentry-3.1 ral0.8.8 sqlite3.5.9 tablelist-4.9 tcllib1.10
+    Memchan2.2.1 mentry-3.1 ral0.8.8 sqlite3.6.3 tablelist-4.10 tcllib1.10
     TclOO0.4 tclx8.4 tdom0.8.2 thread2.6.5 tkcon tklib0.4 Tktable2.9
     treectrl2.2.3 trofs0.4.4 udp1.0.8 wcb-3.1 xotcl1.6.1
   tksqlite    - ready to run sqlite table editor
@@ -32,8 +32,8 @@ Quick start
   ./kbs.tcl gui
    * Display online help:
   ./kbs.tcl
-=== Read definitions from /home/rene/kbs/sources/kbskit-8.5/kbskit.kbs
-Kitgen Build System (0.2.4 Revision: 1.11)
+=== Read definitions from /home/rene/tmp.kbs/sources/kbskit-8.5/kbskit.kbs
+Kitgen Build System (0.2.5 Revision: 1.12 )
 kbs.tcl ?options? mode ?args?
 options:
   -pkgfile=?file?      contain used Package definitions
@@ -116,5 +116,4 @@ and ideas and code about a kitgen build system by Jean-Claude Wippler.
 With thanks to John Ousterhout for creating Tcl/Tk, Matt Newman and Vince Darley
 for developing the virtual file system, and the members of the Tcl Core Team for
 diligently maintaining and taking forward the Tcl/Tk code base plus extensions.
-
 

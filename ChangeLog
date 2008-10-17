@@ -1,3 +1,15 @@
+2008-10-16  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.2.5
+	* kbs/kbs.tcl:
+	- changes for tcl/tk 8.5.5 and kbskit 0.2.5
+	* kbskit/kbskit.kbs: changed
+	- tcl/tk 8.6a3
+	- tcl/tk 8.5.5
+	- sqlite 3.6.3
+	- tablelist 4.10
+	- mentry 3.2
+	* kbskit/library/setupvfs.tcl kbskit/library/vfs1.3-pkgIndex.tcl:
+	- addded available vfs types
 2008-08-27  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.2.4
 	* kbs/kbs.tcl:
