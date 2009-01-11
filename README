@@ -1,4 +1,4 @@
-kbs -- kitgen build system (version 0.2.4 for tcl/tk 8.5.4 and 8.6a2)
+kbs -- kitgen build system (version 0.2.6 for tcl/tk 8.5.5 and 8.6b1)
 ==========================
 
 The system can generate [Tclkit Lite] executables and Tcl packages for
@@ -16,9 +16,9 @@ Sources are available from <http://sourceforge.net/projects/kbskit>
   kbskit*gui* - tk static inserted
   kbspkg85.kit with:
     bwidget-1.8.0 gridplus-2.3 icons-1.2 Img1.3 itcl3.4 itk3.4 iwidgets4.0.2
-    Memchan2.2.1 mentry-3.1 ral0.8.8 sqlite3.6.3 tablelist-4.10 tcllib1.10
-    TclOO0.4 tclx8.4 tdom0.8.2 thread2.6.5 tkcon tklib0.4 Tktable2.9
-    treectrl2.2.3 trofs0.4.4 udp1.0.8 wcb-3.1 xotcl1.6.1
+    Memchan2.2.1 mentry-3.1 ral0.8.8 sqlite3.6.7 tablelist-4.10 tcllib1.11
+    TclOO0.6 tclx8.4 tdom0.8.2 thread2.6.5 tkcon tklib0.4 Tktable2.10
+    treectrl2.2.3 trofs0.4.4 udp1.0.8 wcb-3.1 xotcl1.6.2
   tksqlite    - ready to run sqlite table editor
 
 Quick start
@@ -33,7 +33,7 @@ Quick start
    * Display online help:
   ./kbs.tcl
 === Read definitions from /home/rene/tmp.kbs/sources/kbskit-8.5/kbskit.kbs
-Kitgen Build System (0.2.5 Revision: 1.12 )
+Kitgen Build System (0.2.6 Revision: 1.13 )
 kbs.tcl ?options? mode ?args?
 options:
   -pkgfile=?file?      contain used Package definitions

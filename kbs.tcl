@@ -9,7 +9,6 @@
 #
 # AUTHOR
 #  <jcw@equi4.com> -- Initial ideas and kbskit sources
-#
 #  <r.zaumseil@freenet.de> -- kbskit TEA extension and development
 #
 # COPYRIGHT
@@ -28,10 +27,10 @@ esac ;\
 if test ! -d sources ; then mkdir sources; fi;\
 if test ! -x ${EXE} ; then \
   if test ! -d sources/tcl-8.5 ; then \
-    ( cd sources && cvs -d :pserver:anonymous@tcl.cvs.sourceforge.net:/cvsroot/tcl -z3 co -r core-8-5-5 tcl && mv tcl tcl-8.5 ) ;\
+    ( cd sources && cvs -d :pserver:anonymous@tcl.cvs.sourceforge.net:/cvsroot/tcl -z3 co -r core-8-5-6 tcl && mv tcl tcl-8.5 ) ;\
   fi ;\
   if test ! -d sources/tk-8.5 ; then \
-    ( cd sources && cvs -d :pserver:anonymous@tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -z3 co -r core-8-5-5 tk && mv tk tk-8.5 ) ;\
+    ( cd sources && cvs -d :pserver:anonymous@tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -z3 co -r core-8-5-6 tk && mv tk tk-8.5 ) ;\
   fi ;\
   mkdir -p ${PREFIX}/tcl ;\
   ( cd ${PREFIX}/tcl && ../../sources/tcl-8.5/${DIR}/configure --disable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} && make install-binaries install-libraries ) ;\
@@ -121,7 +120,7 @@ The following configuration variables can be used:}
 # SYNOPSIS
 proc ::kbs::version {{print 1}} {
 # SOURCE
-  set myVersion "0.2.5 [string trim {$Revision$} \$]"
+  set myVersion "0.2.6 [string trim {$Revision$} \$]"
   if {$print || $::kbs::config::verbose} {puts "Version: $myVersion"}
   return $myVersion
 }
