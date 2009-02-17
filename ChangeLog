@@ -1,3 +1,48 @@
+2009-02-17  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.3
+	* kbs.tcl:
+	- use kbskit sources with version number of kbs
+	- new options:
+	  -vq -vq-cli -vq-dyn -vq-gui -vq-bi
+	  -mk -mk-cli -mk-dyn -mk-gui -mk-bi
+	  -bi
+	- added new options to gui
+	* kbskit/kbskit.kbs:
+	- changed 'Package' format:
+	  Package <name> {
+	    Require script
+	    Source script
+	    Configure script
+	    Make script
+	    Install script
+	    Clean script
+	    Test script
+	  }
+	- install dirs have same name as source dirs (needed for '-bi')
+	- new/changed internal proc's:
+	  Run and Get for all targets
+	  Link, Script, Http, Tgz, Zip, Cvs, Svn in Source
+	  Patch, Kit in Configure
+	  Kit in Make
+	  Libdir, Kit, Tcl in Install
+	  Kit in Test
+	* kbskit/kbskit.kbs:
+	- gridplus 2.4
+	- itcl 4.0b3
+	- tklib 0.5
+	- sqlite 3.6.10
+	* kbskit/kbskit.kbs:
+	* kbskit/configure.in:
+	* kbskit/configure:
+	* kbskit/Makefile.in:
+	* kbskit/library/setupvfs.tcl:
+	- support of vlerq and metakit builds -> changed output file names!
+	- used internal zlib for tcl8.6
+	- added all tcl packages (msgcat,...) in kitfiles
+	* kbskit/kbspkg.vfs/main.tcl:
+	- added options list, load and help message
+	* kbskit/generic/pwb.c: removed
+	* kbskit/library/config.tcl: removed
 2009-01-11  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.2.6
 	* kbs/kbs.tcl:
