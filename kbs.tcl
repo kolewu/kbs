@@ -1133,20 +1133,20 @@ proc ::kbs::config::Install {script} {
 #  This function is necessary to install all packages with the same
 #  naming convention (lower case name plus version number).
 # INPUTS
-#  diriname -- package library dir, not conforming lower case with version number
+#  dirname -- package library dir, not conforming lower case with version number
 # SYNOPSIS
 proc ::kbs::config::Install-Libdir {dirname} {
 # SOURCE
   variable verbose
   variable package
 
-  set myLib [Get builddir]/lib
-  if {[file exists $myLib/$dirname]} {
-    if {$verbose} {puts "$myLib/$dirname -> $package"}
-    file delete -force $myLib/$package
-    file rename $myLib/$dirname $myLib/$package
-  } else {
-    puts "skipping: $myLib/$dirname -> $package"
+  set mySrc [Get builddir]/lib/$dirname
+  set myDst [Get builddir]/lib/$package
+  if {[file exists $mySrc]} {
+    if {$verbose} {puts "$mySrc -> $myDst"}
+    file rename $mySrc $mySrc.Libdir;# because of windows
+    file delete -force $myDst;# remove old version
+    file rename $mySrc.Libdir $myDst
   }
 }
 
