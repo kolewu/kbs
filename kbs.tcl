@@ -12,8 +12,9 @@
 #  <r.zaumseil@freenet.de> -- kbskit TEA extension and development
 #
 # COPYRIGHT
-#  See the file 'license.terms' for information on usage and redistribution of
-#  this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#  Call './kbs.tcl license' or search for 'set ::kbs(license)' in this file
+#  for information on usage and redistribution of this file,
+#  and for a DISCLAIMER OF ALL WARRANTIES.
 #
 # VERSION
 #  $Id$
@@ -27,10 +28,10 @@ esac ;\
 if test ! -d sources ; then mkdir sources; fi;\
 if test ! -x ${EXE} ; then \
   if test ! -d sources/tcl8.5 ; then \
-    ( cd sources && cvs -d :pserver:anonymous@tcl.cvs.sourceforge.net:/cvsroot/tcl -z3 co -r core-8-5-6 tcl && mv tcl tcl8.5 ) ;\
+    ( cd sources && cvs -d :pserver:anonymous@tcl.cvs.sourceforge.net:/cvsroot/tcl -z3 co -r core-8-5-7 tcl && mv tcl tcl8.5 ) ;\
   fi ;\
   if test ! -d sources/tk8.5 ; then \
-    ( cd sources && cvs -d :pserver:anonymous@tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -z3 co -r core-8-5-6 tk && mv tk tk8.5 ) ;\
+    ( cd sources && cvs -d :pserver:anonymous@tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -z3 co -r core-8-5-7 tk && mv tk tk8.5 ) ;\
   fi ;\
   mkdir -p ${PREFIX}/tcl ;\
   ( cd ${PREFIX}/tcl && ../../sources/tcl8.5/${DIR}/configure --disable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} && make install-binaries install-libraries ) ;\
@@ -38,14 +39,53 @@ if test ! -x ${EXE} ; then \
   mkdir -p ${PREFIX}/tk ;\
   ( cd ${PREFIX}/tk && ../../sources/tk8.5/${DIR}/configure --enable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} --with-tcl=${PREFIX}/lib && make install-binaries install-libraries ) ;\
 fi ;\
-if test ! -d sources/kbskit0.3 ; then\
-  ( cd sources && cvs -d :pserver:anonymous@kbskit.cvs.sourceforge.net:/cvsroot/kbskit -z3 co -r kbskit_0_3 kbskit && mv kbskit kbskit0.3) ;\
+if test ! -d sources/kbskit0.3.1 ; then\
+  ( cd sources && cvs -d :pserver:anonymous@kbskit.cvs.sourceforge.net:/cvsroot/kbskit -z3 co -r kbskit_0_3_1 kbskit && mv kbskit kbskit0.3.1) ;\
 fi ;\
 exec ${EXE} "$0" ${1+"$@"}
 #===============================================================================
-set ::kbs {0.3};# current version and version of used kbskit
 
 catch {wm withdraw .};# do not show toplevel in command line mode
+
+#***v* ::/$kbs
+# FUNCTION
+#  Array variable with static informations.
+# SOURCE
+set ::kbs(version) {0.3.1};# current version and version of used kbskit
+set ::kbs(license) {
+This software is copyrighted by Rene Zaumseil (the maintainer).
+The following terms apply to all files associated with the software
+unless explicitly disclaimed in individual files.
+
+This software is copyrighted by the Regents of the University of
+California, Sun Microsystems, Inc., Scriptics Corporation, ActiveState
+Corporation and other parties.  The following terms apply to all files
+associated with the software unless explicitly disclaimed in
+individual files.
+
+The author hereby grant permission to use, copy, modify, distribute,
+and license this software and its documentation for any purpose, provided
+that existing copyright notices are retained in all copies and that this
+notice is included verbatim in any distributions. No written agreement,
+license, or royalty fee is required for any of the authorized uses.
+Modifications to this software may be copyrighted by their authors
+and need not follow the licensing terms described here, provided that
+the new terms are clearly indicated on the first page of each file where
+they apply.
+
+IN NO EVENT SHALL THE AUTHORS OR DISTRIBUTORS BE LIABLE TO ANY PARTY
+FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+ARISING OUT OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY
+DERIVATIVES THEREOF, EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.  THIS SOFTWARE
+IS PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND DISTRIBUTORS HAVE
+NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
+MODIFICATIONS.}
+#-------------------------------------------------------------------------------
 
 #***N* kbs.tcl/::kbs
 # FUNCTION
@@ -53,8 +93,8 @@ catch {wm withdraw .};# do not show toplevel in command line mode
 # SYNOPSIS
 namespace eval ::kbs {
 # SOURCE
-  namespace export help version kbs gui list require
-  namespace export source configure make install clean distclean
+  namespace export help version kbs list info gui
+  namespace export require source configure make install clean distclean
 #-------------------------------------------------------------------------------
 }
 
@@ -68,69 +108,96 @@ namespace eval ::kbs {
 proc ::kbs::help {} {
 # SOURCE
   puts "[::kbs::config::Get application]
-kbs.tcl ?options? mode ?args?
+Usage: kbs.tcl ?options? mode ?args?
+
 options (configuration variables are available with \[Get ..\]):
-  -pkgfile=?file?      contain used Package definitions
-                       (default is 'sources/kbskit${::kbs}/kbskit.kbs')
-  -builddir=?dir?      set used building directory containing all package
-                       specific 'makedir' (default is './build\$tcl_platform(os)')
-  -i -ignore           ignore errors and proceed (default is disabled)
-  -r -recursive        recursive Require packages (default is disabled)
-  -v -verbose          display running commands and command output
-  -CC=?command?        set configuration variable 'CC'
-                       (default is 'gcc' or existing environment variable 'CC')
-  -bi=?package ..?     set configuration variable 'bi' (default is '')
-                       to list of packages for use in batteries included builds
+  -pkgfile=?file?   contain used Package definitions
+                    (default is 'sources/kbskit$::kbs(version)/kbskit.kbs')
+  -builddir=?dir?   set used building directory containing all package
+                    specific 'makedir' (default is './build\$tcl_platform(os)')
+  -i -ignore        ignore errors and proceed (default is disabled)
+  -r -recursive     recursive Require packages (default is disabled)
+  -v -verbose       display running commands and command output
+  -CC=?command?     set configuration variable 'CC'
+                    (default is 'gcc' or existing environment variable 'CC')
+  -bi=?package ..?  set configuration variable 'bi' (default is '')
+                    to list of packages for use in batteries included builds
   --enable-symbols
-  --disable-symbols    set configuration variable 'symbols'
+  --disable-symbols set configuration variable 'symbols'
   --enable-64bit
-  --disable-64bit      set configuration variable '64bit'
+  --disable-64bit   set configuration variable '64bit'
   --enable-threads
-  --disable-threads    set configuration variable 'threads'
+  --disable-threads set configuration variable 'threads'
   --enable-aqua
-  --disable-aqua       set configuration variable 'aqua'
+  --disable-aqua    set configuration variable 'aqua'
+  Used external programs (default values are found with 'auto_execok'):
+  -make=?command?   set configuration variable 'exec-make'
+                    (default is first found 'gmake' or 'make')
+  -cvs=?command?    set configuration variable 'exec-cvs' (default is 'cvs')
+  -svn=?command?    set configuration variable 'exec-svn' (default is 'svn')
+  -tar=?command?    set configuration variable 'exec-tar' (default is 'tar')
+  -gzip=?command?   set configuration variable 'exec-gzip' (default is 'gzip')
+  -unzip=?command?  set configuration variable 'exec-unzip' (default is 'unzip')
   Mk4tcl based 'tclkit' interpreter build options:
-  -mk                  add 'mk-cli|dyn|gui' to variable 'kit'
-  -mk-cli              add 'mk-cli' to variable 'kit'
-  -mk-dyn              add 'mk-dyn' to variable 'kit'
-  -mk-gui              add 'mk-gui' to variable 'kit'
-  -mk-bi               add 'mk-bi' to variable 'kit'
+  -mk               add 'mk-cli|dyn|gui' to variable 'kit'
+  -mk-cli           add 'mk-cli' to variable 'kit'
+  -mk-dyn           add 'mk-dyn' to variable 'kit'
+  -mk-gui           add 'mk-gui' to variable 'kit'
+  -mk-bi            add 'mk-bi' to variable 'kit'
   Vqtcl based 'tclkit lite' interpreter build options:
-  -vq                  add 'vq-cli|dyn|gui' to variable 'kit'
-  -vq-cli              add 'vq-cli' to variable 'kit'
-  -vq-dyn              add 'vq-dyn' to variable 'kit'
-  -vq-gui              add 'vq-gui' to variable 'kit'
-  -vq-bi               add 'vq-bi' to variable 'kit'
+  -vq               add 'vq-cli|dyn|gui' to variable 'kit'
+  -vq-cli           add 'vq-cli' to variable 'kit'
+  -vq-dyn           add 'vq-dyn' to variable 'kit'
+  -vq-gui           add 'vq-gui' to variable 'kit'
+  -vq-bi            add 'vq-bi' to variable 'kit'
   If no interpreter option is given '-vq' will be asumed.
-Additional Variables for use with \[Get ..\]):
-  application          name of application including version number
-  builddir             common build dir (can be set with -builddir=..)
-  makedir              package specific dir under 'builddir'
-  srcdir               package specific source dir under './sources/'
+
+additional variables for use with \[Get ..\]):
+  application       name of application including version number
+  builddir          common build dir (can be set with -builddir=..)
+  makedir           package specific dir under 'builddir'
+  srcdir            package specific source dir under './sources/'
   builddir-sys
   makedir-sys
-  srcdir-sys           system specific version (p.e. windows C:\\.. -> /..)
-  sys                  TEA specific platform subdir (win, unix)
-  TCL*                 TCL* variables from tclConfig.sh, loaded on demand
-  TK*                  TK* variables from tkConfig.sh, loaded on demand
-mode:
-  help                 this text
-  doc                  create program documentation (./doc/kbs.html)
-  gui                  start graphical user interface
-  list ?pattern?       list packages matching pattern (default is *)
-  require package ..   return call trace of packages
-  sources package ..   get package source files (under sources/)
-  configure package .. create 'makedir' (in 'builddir') and configure package
-  make package ..      make package (in 'makedir')
-  install package ..   install package (in 'builddir')
-  test package ..      test package
-  clean package ..     remove make targets
-  distclean package .. remove 'makedir'
-package is used for glob style matching against available packages
-(Beware, you need to hide the special meaning of * like foo\*)
+  srcdir-sys        system specific version (p.e. windows C:\\.. -> /..)
+  sys               TEA specific platform subdir (win, unix)
+  TCL*              TCL* variables from tclConfig.sh, loaded on demand
+  TK*               TK* variables from tkConfig.sh, loaded on demand
 
-The following configuration variables can be used:"
-  namespace eval ::kbs::config {parray _}
+mode:
+  help              this text
+  doc               create program documentation (./doc/kbs.html)
+  license           display license information
+  config            display used values of configuration variables
+  gui               start graphical user interface
+  list ?pattern?    list packages matching pattern (default is *)
+  require pkg ..    return call trace of packages
+  sources pkg ..    get package source files (under sources/)
+  configure pkg ..  create 'makedir' (in 'builddir') and configure package
+  make pkg ..       make package (in 'makedir')
+  install pkg ..    install package (in 'builddir')
+  test pkg ..       test package
+  clean pkg ..      remove make targets
+  distclean pkg ..  remove 'makedir'
+'pkg' is used for glob style matching against available packages
+(Beware, you need to hide the special meaning of * like foo\\*)
+
+Startup configuration:
+  Read files '\$(HOME)/.kbsrc' and './kbsrc'. Lines starting with '#' are
+  treated as comments and removed. All other lines are concatenated and
+  used as command line arguments.
+  Read environment variable 'KBSRC'. The contents of this variable is used
+  as command line arguments.
+
+The following external programs are needed:
+  * C-compiler, C++ compiler for metakit based programs (see -CC=)
+  * make with handling of VPATH variables (gmake) (see -make=)
+  * cvs, svn (not yet used), tar, gzip, unzip to get and extract sources
+    (see -cvs= -svn= -tar= -gzip= and -unzip= options)
+  * msys (http://sourceforge.net/project/showfiles.php?group_id=10894) is
+    used to build under Windows. You need to put the kbs-sources inside
+    the msys tree (/home/..).
+"
 }
 
 #-------------------------------------------------------------------------------
@@ -186,6 +253,36 @@ end markers:
   install robodoc\*
   cd $myPwd
   ::kbs::config::Run [::kbs::config::Get builddir]/bin/robodoc --rc doc/kbs.rc {*}$args
+}
+
+#-------------------------------------------------------------------------------
+
+#***f* ::kbs/license()
+# FUNCTION
+#  Display license information.
+# EXAMPLE
+#  * display license information:
+#    ./kbs.tcl license
+# INPUTS
+# SYNOPSIS
+proc ::kbs::license {} {
+  puts $::kbs(license)
+}
+
+#-------------------------------------------------------------------------------
+
+#***f* ::kbs/config()
+# FUNCTION
+#  Display names and values of configuration variables useable with 'Get'.
+# EXAMPLE
+#  * display used values:
+#    ./kbs.tcl config
+# SYNOPSIS
+proc ::kbs::config {} {
+# SOURCE
+  foreach myName [lsort [array names ::kbs::config::_]] {
+    puts [format {%-20s = %s} "\[Get $myName\]" [::kbs::config::Get $myName]]
+  }
 }
 
 #-------------------------------------------------------------------------------
@@ -391,7 +488,7 @@ namespace eval ::kbs::config {
   namespace export Run Get Require Source Configure Make Install Clean Test
 #-------------------------------------------------------------------------------
 
-#***iv* ::kbs::config/maindir
+#***iv* ::kbs::config/$maindir
 # FUNCTION
 #  Internal variable containing top level script directory.
 # SYNOPSIS
@@ -399,7 +496,7 @@ namespace eval ::kbs::config {
 
 #-------------------------------------------------------------------------------
 
-#***iv* ::kbs::config/packages
+#***iv* ::kbs::config/$packages
 # FUNCTION
 #  Internal variable with package definitions from *.kbs files.
 # SYNOPSIS
@@ -407,7 +504,7 @@ namespace eval ::kbs::config {
 
 #-------------------------------------------------------------------------------
 
-#***iv* ::kbs::config/package
+#***iv* ::kbs::config/$package
 # FUNCTION
 #  Internal variable containing current package name.
 # SYNOPSIS
@@ -415,7 +512,7 @@ namespace eval ::kbs::config {
 
 #-------------------------------------------------------------------------------
 
-#***iv* ::kbs::config/ready
+#***iv* ::kbs::config/$ready
 # FUNCTION
 #  Internal variable containing list of already prepared packages.
 # SYNOPSIS
@@ -423,7 +520,7 @@ namespace eval ::kbs::config {
 
 #-------------------------------------------------------------------------------
 
-#***v* ::kbs::config/ignore
+#***v* ::kbs::config/$ignore
 # FUNCTION
 #  If set (-i or -ignore switch) then proceed in case of errors.
 # EXAMPLE
@@ -437,7 +534,7 @@ namespace eval ::kbs::config {
 
 #-------------------------------------------------------------------------------
 
-#***v* ::kbs::config/recursive
+#***v* ::kbs::config/$recursive
 # FUNCTION
 #  If set (-r or -recursive switch) then all packages under 'Require'
 #  are also used.
@@ -452,7 +549,7 @@ namespace eval ::kbs::config {
 
 #-------------------------------------------------------------------------------
 
-#***v* ::kbs::config/verbose
+#***v* ::kbs::config/$verbose
 # FUNCTION
 #  If set (-v or -verbose switch) then all stdout will be removed.
 # EXAMPLE
@@ -466,10 +563,10 @@ namespace eval ::kbs::config {
 
 #-------------------------------------------------------------------------------
 
-#***v* ::kbs::config/pkgfile
+#***v* ::kbs::config/$pkgfile
 # FUNCTION
 #  Define startup kbs package definition file.
-#  Default is './sources/kbskit${::kbs}/kbskit.kbs'.
+#  Default is './sources/kbskit$::kbs(version)/kbskit.kbs'.
 # EXAMPLE
 #  * start with own package definition file:
 #    ./kbs.tcl -pkgfile=/my/package/file list
@@ -480,10 +577,17 @@ namespace eval ::kbs::config {
 
 #-------------------------------------------------------------------------------
 
-#***v* ::kbs::config/_
+#***v* ::kbs::config/$_
 # FUNCTION
 # The array variable contain usefull information of the current building process.
-# The configuration options, can be set on startup.
+# All variables are provided with default values.
+# Changing of the default values can be done in the following order:
+# - file '$(HOME)/.kbsrc' and file './kbsrc' -- Lines starting with '#' are
+#   treated as comments and removed. All other lines are concatenated and
+#   used as command line arguments.
+# - environment variable 'KBSRC' -- The contents of this variable is used
+#   as command line arguments.
+# - command line 
 # It is also possible to set values in the 'Package' definition file
 # outside the 'Package definition (p.e. 'set ::kbs::config::_(CC) g++').
 # EXAMPLE
@@ -512,6 +616,12 @@ namespace eval ::kbs::config {
   } else {
     set _(sys)		{unix}
   }
+  set _(exec-make)	[lindex "[auto_execok gmake] [auto_execok make] make" 0]
+  set _(exec-cvs)	[lindex "[auto_execok cvs] cvs" 0]
+  set _(exec-svn)	[lindex "[auto_execok svn] svn" 0]
+  set _(exec-tar)	[lindex "[auto_execok tar] tar" 0]
+  set _(exec-gzip)	[lindex "[auto_execok gzip] gzip" 0]
+  set _(exec-unzip)	[lindex "[auto_execok unzip] unzip" 0]
   set _(kit)		[list];# list of interpreter builds
   set _(bi)		[list];# list of packages for batteries included interpreter builds
   set _(makedir)	{};# package specific build dir
@@ -520,7 +630,7 @@ namespace eval ::kbs::config {
   set _(srcdir-sys)	{};# package and system specific source dir
   set _(builddir)	[file join $maindir build[string map {{ } {}} $::tcl_platform(os)]]
   set _(builddir-sys)	$_(builddir)
-  set _(application)	"Kitgen build system (${::kbs})";# application name
+  set _(application)	"Kitgen build system ($::kbs(version))";# application name
 #-------------------------------------------------------------------------------
 }
 
@@ -737,7 +847,7 @@ proc ::kbs::config::Source {script} {
     interp alias $interp $my
   }
   if {$_(srcdir) eq {}} {
-    return -code error "no sources"
+    return -code error "missing sources of package '$package'"
   }
   set _(srcdir-sys) [_sys $_(srcdir)]
 }
@@ -854,8 +964,8 @@ proc ::kbs::config::Source- {type args} {
           file delete -force $myDir.tmp
           file mkdir $myDir.tmp
           cd $myDir.tmp
-          if {$type eq {Tgz}} {exec gzip -dc $args | tar xf -}
-          if {$type eq {Zip}} {exec unzip $args}
+          if {$type eq {Tgz}} {exec $_(exec-gzip) -dc $args | $_(exec-tar) xf -}
+          if {$type eq {Zip}} {exec $_(exec-unzip) $args}
           cd [file join $maindir sources]
           set myList [glob $myDir.tmp/*]
           if {[llength $myList] == 1 && [file isdir $myList]} {
@@ -936,8 +1046,7 @@ proc ::kbs::config::Configure-Patch {file lineoffset oldtext newtext} {
   for {set myNr 1} {$myNr < $lineoffset} {incr myNr} {;# find line
     set myIndex [string first \n $myC $myIndex]
     if {$myIndex == -1} {
-      puts "failed Patch: '$file' at $lineoffset -> eof at line $myNr"
-      return
+      return -code error "failed Patch: '$file' at $lineoffset -> eof at line $myNr"
     }
     incr myIndex
   }
@@ -953,9 +1062,8 @@ proc ::kbs::config::Configure-Patch {file lineoffset oldtext newtext} {
   # test for oldtext; patch todo
   set myIndex [string length $oldtext]
   if {[string compare -length $myIndex $oldtext $myTest] != 0} {
-    puts "skip Patch: '$file' at $lineoffset"
-    if {$verbose} {puts "old version:\n$oldtext\nnew version:\n[string range $myTest 0 $myIndex]"}
-    return -code error "patch failed"
+    if {$verbose} {puts "---old version---:\n$oldtext\n---new version---:\n[string range $myTest 0 $myIndex]"}
+    return -code error "failed Patch: '$file' at $lineoffset"
   }
   # apply patch
   append myC $newtext[string range $myTest $myIndex end]
@@ -1006,10 +1114,10 @@ if {[catch {
   set auto_path [linsert $auto_path 0 [file join $::starkit::topdir lib]]
 }
 # used packages};# end of puts
-  foreach myPkg [lrange $args 1 end] {
+  foreach myPkg $args {
     puts $myFd "package require $myPkg"
   }
-  puts $myFd "# start application\n[lindex $args 0]"
+  puts $myFd "# start application\n$maincode"
   close $myFd
 }
 
@@ -1140,13 +1248,16 @@ proc ::kbs::config::Install-Libdir {dirname} {
   variable verbose
   variable package
 
-  set mySrc [Get builddir]/lib/$dirname
-  set myDst [Get builddir]/lib/$package
-  if {[file exists $mySrc]} {
-    if {$verbose} {puts "$mySrc -> $myDst"}
-    file rename $mySrc $mySrc.Libdir;# because of windows
-    file delete -force $myDst;# remove old version
-    file rename $mySrc.Libdir $myDst
+  set myLib [Get builddir]/lib
+  if {[file exists $myLib/$dirname]} {
+    if {$verbose} {puts "$myLib/$dirname -> $package"}
+    # two steps to distinguish under windows lower and upper case names
+    file delete -force $myLib/$dirname.Libdir
+    file rename $myLib/$dirname $myLib/$dirname.Libdir
+    file delete -force $myLib/$package
+    file rename $myLib/$dirname.Libdir $myLib/$package
+  } else {
+    if {$verbose} {puts "skipping: $myLib/$dirname -> $package"}
   }
 }
 
@@ -1207,7 +1318,7 @@ proc ::kbs::config::Install-Kit {name args} {
     file rename -force $name [file join [Get builddir] bin $name.kit]
   } else {
     Run $myExe [file join [Get builddir] bin sdx.kit] wrap $name -runtime {*}$myRun
-    if {$_(DIR) eq {win}} {
+    if {$_(sys) eq {win}} {
       file rename -force $name [file join [Get builddir] bin $name.exe]
     } else {
       file rename -force $name [file join [Get builddir] bin]
@@ -1396,7 +1507,11 @@ proc ::kbs::config::Get {var} {
 # SYNOPSIS
 proc ::kbs::config::Run {args} {
 # SOURCE
+  variable _
   variable verbose
+  if {[info exists _(exec-[lindex $args 0])]} {
+    set args [lreplace $args 0 0 $_(exec-[lindex $args 0])]
+  }
 
   if {$verbose} {
     ::kbs::gui::_state -running $args
@@ -1429,6 +1544,28 @@ proc ::kbs::config::_configure {args} {
   variable verbose
   variable _
 
+  set myOpts {}
+  # read configuration files
+  foreach myFile [list [file join $::env(HOME) .kbsrc] [file join $maindir kbsrc]] {
+    if {[file readable $myFile]} {
+      puts "=== Read configuration file '$myFile'"
+      set myFd [open $myFile r]
+      append myOpts [read $myFd]\n
+      close $myFd
+    }
+  }
+  # read configuration variable
+  if {[info exists ::env(KBSRC)]} {
+    puts "=== Read configuration variable 'KBSRC'"
+    append myOpts $::env(KBSRC)
+  }
+  # add all found configuration options to command line
+  foreach myLine [split $myOpts \n] {
+    set myLine [string trim $myLine]
+    if {$myLine eq {} || [string index $myLine 0] eq {#}} continue
+    set args "$myLine $args"
+  }
+  # start command line parsing
   set myPkgfile {}
   set myIndex 0
   foreach myCmd $args {
@@ -1456,6 +1593,18 @@ proc ::kbs::config::_configure {args} {
         set _(threads) $myCmd
       } --enable-aqua - --disable-aqua {
         set _(aqua) $myCmd
+      } -make=* {
+        set _(exec-make) [string range $myCmd 6 end]
+      } -cvs=* {
+        set _(exec-cvs) [string range $myCmd 5 end]
+      } -svn=* {
+        set _(exec-svn) [string range $myCmd 5 end]
+      } -tar=* {
+        set _(exec-tar) [string range $myCmd 5 end]
+      } -gzip=* {
+        set _(exec-gzip) [string range $myCmd 6 end]
+      } -unzip=* {
+        set _(exec-unzip) [string range $myCmd 7 end]
       } -mk {
         lappend _(kit) mk-cli mk-dyn mk-gui
       } -mk-cli {
@@ -1490,10 +1639,11 @@ proc ::kbs::config::_configure {args} {
   if {$_(kit) eq {}} {set _(kit) vq};# default setting
   file mkdir $_(builddir) [file join $maindir sources]
   if {$myPkgfile eq {} && $pkgfile eq {}} {
-    set myPkgfile [file join $maindir sources kbskit$::kbs kbskit.kbs]
+    set myPkgfile [file join $maindir sources kbskit$::kbs(version) kbskit.kbs]
   }
+  # read kbs configuration file
   if {$myPkgfile != ""} {
-    puts "=== Read definitions from $myPkgfile"
+    puts "=== Read definitions from '$myPkgfile'"
     source $myPkgfile
     set pkgfile $myPkgfile
   }
@@ -1511,7 +1661,7 @@ namespace eval ::kbs::gui {
 
 #-------------------------------------------------------------------------------
 
-#***iv* ::kbs::gui/_
+#***iv* ::kbs::gui/$_
 # FUNCTION
 #  Containing internal gui state values.
 # SYNOPSIS
@@ -1562,10 +1712,23 @@ proc ::kbs::gui::_init {args} {
 	-row 3 -column 1 -sticky ew
   grid [::ttk::entry $w.8 -textvariable ::kbs::config::_(CC)]\
 	-row 3 -column 2 -sticky ew
-  grid [::ttk::button $w.9 -width 3 -text {...} -command {::kbs::gui::_set_cc} -padding 0]\
+  grid [::ttk::button $w.9 -width 3 -text {...} -command {::kbs::gui::_set_exec CC {Select C-compiler}} -padding 0]\
 	-row 3 -column 3 -sticky ew
-
   lappend _(widgets) $w.6 $w.8 $w.9
+
+  set myRow 3
+  set myW 9
+  foreach myCmd {make cvs svn tar gzip unzip} {
+    incr myRow
+    grid [::ttk::label $w.[incr myW] -anchor e -text "-${myCmd}="]\
+	-row $myRow -column 1 -sticky ew
+    grid [::ttk::entry $w.[incr myW] -textvariable ::kbs::config::_(exec-$myCmd)]\
+	-row $myRow -column 2 -sticky ew
+    lappend _(widgets) $w.$myW
+    grid [::ttk::button $w.[incr myW] -width 3 -text {...} -command "::kbs::gui::_set_exec exec-${myCmd} {Select '${myCmd}' program}" -padding 0]\
+	-row $myRow -column 3 -sticky ew
+    lappend _(widgets) $w.$myW
+  }
 
   # select options
   set w .sel
@@ -1710,16 +1873,19 @@ proc ::kbs::gui::_set_builddir {} {
 
 #-------------------------------------------------------------------------------
 
-#***if* ::kbs::gui/_set_cc()
+#***if* ::kbs::gui/_set_exec()
 # FUNCTION
-#  Set configuration variable '::kbs::config::_(CC)'.
+#  Set configuration variable 'varname'.
+# INPUTS
+#  - varname -- name of configuration variable to set
+#  - title -- text to display as title of selection window
 # SYNOPSIS
-proc ::kbs::gui::_set_cc {} {
+proc ::kbs::gui::_set_exec {varname title} {
 # SOURCE
-  set myFile [tk_getOpenFile -parent . -title "Select C-compiler"\
-	-initialdir [file dirname $::kbs::config::_(CC)]]
+  set myFile [tk_getOpenFile -parent . -title $title\
+	-initialdir [file dirname $::kbs::config::_($varname)]]
   if {$myFile eq {}} return
-  set ::kbs::config::_(CC) $myFile
+  set ::kbs::config::_($varname) $myFile
 }
 
 #-------------------------------------------------------------------------------

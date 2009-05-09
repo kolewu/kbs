@@ -1,3 +1,29 @@
+2009-05-09  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.3.1
+	* kbs.tcl:
+	- new command 'license' to display license online
+	  Thanks to lvirden@users.sourceforge.net
+	- new configuration options -make= -cvs= -svn= -tar= -gzip= -unzip=	
+	  to set used external commands
+	- new command 'config' to display current settings
+	  Thanks to lvirden@users.sourceforge.net
+	- read $(HOME)/.kbsrc ./kbsrc files and KBSRC environment variable
+	  on startup to get configuration settings
+	- fixed error in '::kbs::config::Configure-Kit'
+	* kbskit/kbskit.kbs:
+	changed:
+	- tcl/tk 8.5.7
+	- sqlite 3.6.12
+	- tablelist 4.11
+	- treectrl 2.2.8
+	- tksqlite 0.5.8
+	new:
+	- tls1.6
+	- expect5.44
+	fixed:
+	- itcl3.4 itk3.4 using kbs build of tcl/tk
+	  Thanks to christian.gollwitzer@uni-bayreuth.de
+	new command to create sourceforge.net files: ./kbs.tcl make sf.net
 2009-02-17  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.3
 	* kbs.tcl:

@@ -1,4 +1,4 @@
-kbs -- kitgen build system (version 0.3 for tcl/tk 8.5.5 and 8.6b1)
+kbs -- kitgen build system (version 0.3.1 for tcl/tk 8.5.7 and 8.6b1)
 ==========================
 
 The system can generate [Tclkit]  and [Tclkit Lite] executables and
@@ -24,11 +24,9 @@ Sources are available from <http://sourceforge.net/projects/kbskit>
    *kbsvq*bi
   with:
     bwidget1.8.0 gridplus2.4 icons1.2 img1.3 itcl3.4 itk3.4 iwidgets4.0.2
-    memchan2.2.1 mentry3.2 ral0.8.8 sqlite3.6.10 tablelist4.10 tcllib1.11
-    tclx8.4 tdom0.8.2 thread2.6.5 tkcon tklib0.5 tktable2.10 treectrl2.2.3
-    trofs0.4.4 udp1.0.8
-  and under unix:
-    tcloo0.6 snack2.2
+    memchan2.2.1 mentry3.2 ral0.8.8 sqlite3.6.12 tablelist4.11 tcllib1.11
+    tclx8.4 tdom0.8.2 thread2.6.5 tkcon tklib0.5 tktable2.10 treectrl2.2.8
+    trofs0.4.4 udp1.0.8 wcb3.1 xotcl1.6.2
 
 Quick start
 -----------
@@ -40,89 +38,12 @@ Quick start
   ./kbs.tcl -r -vqi-bi -bi=".." install kbskit8.5
    * Build kit-file:
   ./kbs.tcl -r install kbspkg8.5
+   * Show used configuration:
+  ./kbs.tcl config
    * Start graphical user interface:
   ./kbs.tcl gui
-   * Display online help:
-  ./kbs.tcl
-=== Read definitions from /home/rene/tmp.kbs/sources/kbskit0.3/kbskit.kbs
-Kitgen build system (0.3)
-kbs.tcl ?options? mode ?args?
-options (configuration variables are available with [Get ..]):
-  -pkgfile=?file?      contain used Package definitions
-                       (default is 'sources/kbskit0.3/kbskit.kbs')
-  -builddir=?dir?      set used building directory containing all package
-                       specific 'makedir' (default is './build$tcl_platform(os)')
-  -i -ignore           ignore errors and proceed (default is disabled)
-  -r -recursive        recursive Require packages (default is disabled)
-  -v -verbose          display running commands and command output
-  -CC=?command?        set configuration variable 'CC'
-                       (default is 'gcc' or existing environment variable 'CC')
-  -bi=?package ..?     set configuration variable 'bi' (default is '')
-                       to list of packages for use in batteries included builds
-  --enable-symbols
-  --disable-symbols    set configuration variable 'symbols'
-  --enable-64bit
-  --disable-64bit      set configuration variable '64bit'
-  --enable-threads
-  --disable-threads    set configuration variable 'threads'
-  --enable-aqua
-  --disable-aqua       set configuration variable 'aqua'
-  Mk4tcl based 'tclkit' interpreter build options:
-  -mk                  add 'mk-cli|dyn|gui' to variable 'kit'
-  -mk-cli              add 'mk-cli' to variable 'kit'
-  -mk-dyn              add 'mk-dyn' to variable 'kit'
-  -mk-gui              add 'mk-gui' to variable 'kit'
-  -mk-bi               add 'mk-bi' to variable 'kit'
-  Vqtcl based 'tclkit lite' interpreter build options:
-  -vq                  add 'vq-cli|dyn|gui' to variable 'kit'
-  -vq-cli              add 'vq-cli' to variable 'kit'
-  -vq-dyn              add 'vq-dyn' to variable 'kit'
-  -vq-gui              add 'vq-gui' to variable 'kit'
-  -vq-bi               add 'vq-bi' to variable 'kit'
-  If no interpreter option is given '-vq' will be asumed.
-Additional Variables for use with [Get ..]):
-  application          name of application including version number
-  builddir             common build dir (can be set with -builddir=..)
-  makedir              package specific dir under 'builddir'
-  srcdir               package specific source dir under './sources/'
-  builddir-sys
-  makedir-sys
-  srcdir-sys           system specific version (p.e. windows C:\.. -> /..)
-  sys                  TEA specific platform subdir (win, unix)
-  TCL*                 TCL* variables from tclConfig.sh, loaded on demand
-  TK*                  TK* variables from tkConfig.sh, loaded on demand
-mode:
-  help                 this text
-  doc                  create program documentation (./doc/kbs.html)
-  gui                  start graphical user interface
-  list ?pattern?       list packages matching pattern (default is *)
-  require package ..   return call trace of packages
-  sources package ..   get package source files (under sources/)
-  configure package .. create 'makedir' (in 'builddir') and configure package
-  make package ..      make package (in 'makedir')
-  install package ..   install package (in 'builddir')
-  test package ..      test package
-  clean package ..     remove make targets
-  distclean package .. remove 'makedir'
-package is used for glob style matching against available packages
-(Beware, you need to hide the special meaning of * like foo*)
-
-The following configuration variables can be used:
-_(64bit)        = --disable-64bit
-_(CC)           = gcc
-_(application)  = Kitgen build system (0.3)
-_(aqua)         = --enable-aqua
-_(bi)           =
-_(builddir)     = /home/rene/tmp.kbs/buildLinux
-_(builddir-sys) = /home/rene/tmp.kbs/buildLinux
-_(kit)          = vq
-_(makedir)      =
-_(makedir-sys)  =
-_(srcdir)       =
-_(srcdir-sys)   =
-_(symbols)      = --disable-symbols
-_(sys)          = unix
-_(threads)      = --enable-threads
+   * Display options and online help:
+  ./kbs.tcl help
 
 Build requirements
 ------------------
@@ -139,10 +60,10 @@ inside the msys tree (/home/..).
 License & support
 -----------------
 
-This work is under BSD license (see file 'license.terms')
+This work is under BSD license (see with './kbs.tcl license')
 
-The [Tclkit]-specific sources are license free, they just have a copyright. Hold
-the author(s) harmless and any lawful use is permitted.
+The [Tclkit]-specific sources are license free, they just have a copyright.
+Hold the author(s) harmless and any lawful use is permitted.
 
 This does *not* apply to any of the sources of the other major Open Source
 Software used in Tclkit, which each have very liberal BSD/MIT-like licenses:
