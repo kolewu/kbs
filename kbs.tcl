@@ -19,6 +19,10 @@
 # VERSION
 #  $Id$
 #===============================================================================
+# check startup dir containing current file\
+if test ! -r ./kbs.tcl ; then \
+  echo "Please start from directory containing the file 'kbs.tcl'"; exit 1 ;\
+fi;
 # bootstrap for building wish.. \
 PREFIX=`pwd`/`uname` ;\
 case `uname` in \
@@ -879,9 +883,9 @@ proc ::kbs::config::Source- {type args} {
         if {[catch {
           #exec [pwd]/kbs.tcl sources $args >@stdout 2>@stderr
           if {$verbose} {
-            Run [pwd]/kbs.tcl -pkgfile=$pkgfile -builddir=$_(builddir) -v sources $args
+            Run [info nameofexecutable] [pwd]/kbs.tcl -pkgfile=$pkgfile -builddir=$_(builddir) -v sources $args
           } else {
-            Run [pwd]/kbs.tcl -pkgfile=$pkgfile -builddir=$_(builddir) sources $args
+            Run [info nameofexecutable] [pwd]/kbs.tcl -pkgfile=$pkgfile -builddir=$_(builddir) sources $args
           }
         } myMsg]} {
           file delete -force $myDir
