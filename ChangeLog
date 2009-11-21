@@ -1,3 +1,23 @@
+2009-11-21  Rene Zaumseil <r.zaumseil@freenet.de>
+	* kbs.tcl:
+	- now use also svn to get sources
+	- fixed missing executable in recursive source builds
+	  Thanks to christian.gollwitzer@uni-bayreuth.de
+	- move sources/kbskit0.3.1/kbskit.kbs into kbs.tcl
+	changed:
+	- kbskit 0.4
+	- vqtcl, mk4tcl from svn.equi4.com
+	- tcl/tk 8.5.8
+	- img 1.4
+	- gridplus 2.5
+	- mentry 3.3
+	- wcb 3.2
+	- ral 0.9.1
+	- sqlite 3.6.20
+	- tablelist 4.12
+	- xotcl 1.6.5
+	new:
+	- rbc 0.1
 2009-05-09  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.3.1
 	* kbs.tcl:
