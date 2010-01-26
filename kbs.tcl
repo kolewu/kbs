@@ -2390,7 +2390,7 @@ Package mk4tcl2.4.9.7-static {
     Patch [Get srcdir]/unix/Makefile.in 46 {CXXFLAGS = $(CXX_FLAGS)} {CXXFLAGS = -DSTATIC_BUILD $(CXX_FLAGS)}
     #TODO INCLUDE SunOS cc with problems on wide int
     if {$::tcl_platform(os) == "SunOS" && [Get CC] == "cc"} {
-      Patch [Get srcdir]/../sources/mk4tcl2.4.9.7/tcl/mk4tcl.h 9 "#include <tcl.h>\n\n" "#include <tcl.h>\n#undef TCL_WIDE_INT_TYPE\n"
+      Patch [Get srcdir]/tcl/mk4tcl.h 9 "#include <tcl.h>\n\n" "#include <tcl.h>\n#undef TCL_WIDE_INT_TYPE\n"
     }
     Run env CC=[Get CC] [Get srcdir-sys]/unix/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/include [Get 64bit] [Get threads] [Get symbols]
   }
@@ -2998,6 +2998,9 @@ Package rbc0.1 {
     Svn https://rbctoolkit.svn.sourceforge.net/svnroot/rbctoolkit/trunk/rbc -r 48
   }
   Configure {
+    if {[Get sys] eq {unix}} {
+      file attributes [Get srcdir]/tclconfig/install-sh -permissions u+x
+    }
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols] [Get aqua]
   }
   Make { Run make }
