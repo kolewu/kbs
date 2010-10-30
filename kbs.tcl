@@ -67,10 +67,10 @@ esac ;\
 if test ! -d sources ; then mkdir sources; fi;\
 if test ! -x ${EXE} ; then \
   if test ! -d sources/tcl8.5 ; then \
-    ( cd sources && cvs -d :pserver:anonymous@tcl.cvs.sourceforge.net:/cvsroot/tcl -z3 co -r core-8-5-8 tcl && mv tcl tcl8.5 ) ;\
+    ( cd sources && cvs -d :pserver:anonymous@tcl.cvs.sourceforge.net:/cvsroot/tcl -z3 co -r core-8-5-9 tcl && mv tcl tcl8.5 ) ;\
   fi ;\
   if test ! -d sources/tk8.5 ; then \
-    ( cd sources && cvs -d :pserver:anonymous@tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -z3 co -r core-8-5-8 tk && mv tk tk8.5 ) ;\
+    ( cd sources && cvs -d :pserver:anonymous@tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -z3 co -r core-8-5-9 tk && mv tk tk8.5 ) ;\
   fi ;\
   mkdir -p ${PREFIX}/tcl ;\
   ( cd ${PREFIX}/tcl && ../../sources/tcl8.5/${DIR}/configure --disable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} && make install-binaries install-libraries ) ;\
@@ -90,7 +90,7 @@ catch {wm withdraw .};# do not show toplevel in command line mode
 # DESCRIPTION
 #	Array variable with static informations.
 # SOURCE
-set ::kbs(version) {0.4};# current version and version of used kbskit
+set ::kbs(version) {0.4.1};# current version and version of used kbskit
 set ::kbs(license) {
 This software is copyrighted by Rene Zaumseil (the maintainer).
 The following terms apply to all files associated with the software
@@ -175,6 +175,10 @@ options (configuration variables are available with \[Get ..\]):
   -tar=?command?    set configuration variable 'exec-tar' (default is 'tar')
   -gzip=?command?   set configuration variable 'exec-gzip' (default is 'gzip')
   -unzip=?command?  set configuration variable 'exec-unzip' (default is 'unzip')
+  Used interpreter in package scripts (default first found in '[builddir]/bin')
+  -kitcli=?command? set configuration variable 'kitcli' (default 'kbs*cli*')
+  -kitdyn=?command? set configuration variable 'kitdyn' (default 'kbs*dyn*')
+  -kitgui=?command? set configuration variable 'kitgui' (default 'kbs*gui*')
   Mk4tcl based 'tclkit' interpreter build options:
   -mk               add 'mk-cli|dyn|gui' to variable 'kit'
   -mk-cli           add 'mk-cli' to variable 'kit'
@@ -230,7 +234,7 @@ Startup configuration:
 The following external programs are needed:
   * C-compiler, C++ compiler for metakit based programs (see -CC=)
   * make with handling of VPATH variables (gmake) (see -make=)
-  * cvs, svn (not yet used), tar, gzip, unzip to get and extract sources
+  * cvs, svn, tar, gzip, unzip to get and extract sources
     (see -cvs= -svn= -tar= -gzip= and -unzip= options)
   * msys (http://sourceforge.net/project/showfiles.php?group_id=10894) is
     used to build under Windows. You need to put the kbs-sources inside
@@ -374,12 +378,12 @@ proc ::kbs::gui {args} {
 # SOURCE
 proc ::kbs::list {{pattern *} args} {
   if {$args eq {}} {
-    puts [lsort -dict [array names ::kbs::config::packages $pattern]]
+    puts [lsort -dict [array names ::kbs::config::packagescript $pattern]]
   } else {
-    foreach myPkg [lsort -dict [array names ::kbs::config::packages $pattern]] {
+    foreach myPkg [lsort -dict [array names ::kbs::config::packagescript $pattern]] {
       puts "#***v* Package/$myPkg\n# SOURCE"
       puts "Package $myPkg {"
-      foreach {myCmd myScript} $::kbs::config::packages($myPkg) {
+      foreach {myCmd myScript} $::kbs::config::packagescript($myPkg) {
         if {$args eq {Package} || [lsearch $args $myCmd] >= 0} {
           puts "  $myCmd {$myScript}"
         }
@@ -459,8 +463,8 @@ proc ::kbs::make {args} {
 
 #***f* ::kbs/test()
 # DESCRIPTION
-#	Call the 'Require', 'Source' and 'Test' part of the package definition.
-#	The testing starts in 'makedir'
+#	Call the 'Require', 'Source', 'Make' and 'Test' part of the package
+#	definition. The testing starts in 'makedir'
 # EXAMPLE
 #	test the package:
 #	  ./kbs.tcl test kbskit8.5
@@ -551,9 +555,17 @@ namespace eval ::kbs::config {
 
 #***iv* ::kbs::config/$packages
 # DESCRIPTION
-#	Internal variable with package definitions from *.kbs files.
+#	Internal variable with parsed package definitions from *.kbs files.
+#       'Inlude' parts are resolved.
 # SOURCE
   variable packages
+
+#-------------------------------------------------------------------------------
+#***iv* ::kbs::config/$packagescript
+# DESCRIPTION
+#	Internal variable with original package definitions from *.kbs files.
+# SOURCE
+  variable packagescript
 #-------------------------------------------------------------------------------
 
 #***iv* ::kbs::config/$package
@@ -663,6 +675,9 @@ namespace eval ::kbs::config {
   set _(exec-tar)	[lindex "[auto_execok tar] tar" 0]
   set _(exec-gzip)	[lindex "[auto_execok gzip] gzip" 0]
   set _(exec-unzip)	[lindex "[auto_execok unzip] unzip" 0]
+  set _(kitcli)		{}
+  set _(kitdyn)		{}
+  set _(kitgui)         {}
   set _(kit)		[list];# list of interpreter builds
   set _(bi)		[list];# list of packages for batteries included interpreter builds
   set _(makedir)	{};# package specific build dir
@@ -771,7 +786,9 @@ proc ::kbs::config::_init {used list} {
 # SOURCE
 proc ::kbs::config::Package {name script} {
   variable packages
+  variable packagescript
 
+  set packagescript($name) $script
   array set myTmp $script
   if {[info exists myTmp(Include)]} {
     array set myScript $packages($myTmp(Include))
@@ -1379,7 +1396,7 @@ proc ::kbs::config::Test {script} {
 # * name -- name of vfs directory (without extension) to use
 # * args -- additional args
 # SOURCE
-proc ::kbs::config::Test-Kit {mode name args} {
+proc ::kbs::config::Test-Kit {name args} {
   variable _
 
   set myExe [file join [Get builddir] bin $name]
@@ -1627,6 +1644,13 @@ proc ::kbs::config::_configure {args} {
         set _(exec-gzip) [string range $myCmd 6 end]
       } -unzip=* {
         set _(exec-unzip) [string range $myCmd 7 end]
+      } -kitcli=* {
+        set _(kitcli) [string range $myCmd 8 end]
+      } -kitdyn=* {
+        set _(kitdyn) [string range $myCmd 8 end]
+      } -kitgui=* {
+        set _(kitgui) [string range $myCmd 8 end]
+      } -kitgui=* {
       } -mk {
         lappend _(kit) mk-cli mk-dyn mk-gui
       } -mk-cli {
@@ -1659,6 +1683,11 @@ proc ::kbs::config::_configure {args} {
   set _(builddir-sys) [_sys $_(builddir)]
   set _(kit) [lsort -unique $_(kit)];# all options only once
   if {$_(kit) eq {}} {set _(kit) vq};# default setting
+  foreach my {cli dyn gui} {;# default settings
+    if {$_(kit$my) eq {}} {
+      set _(kit$my) [lindex [lsort [glob -nocomplain [file join $_(builddir) bin kbs*${my}*]]] 0]
+    }
+  }
   file mkdir [file join $_(builddir) bin] [file join $maindir sources]
   # read kbs configuration file
   if {$myPkgfile ne {}} {
@@ -2015,6 +2044,25 @@ namespace eval ::kbs::config {
 #-------------------------------------------------------------------------------
 #***v* Package/__
 # SOURCE
+Package tt {
+  Source {
+    Link ../sf.net
+  }
+  Configure {}
+  Make {
+    # do everything from the main directory
+    cd ../..
+    puts "+++ [clock format [clock seconds] -format %T] save 'sf.net/'"
+    set myPrefix "sf.net/[string map {{ } {}} $::tcl_platform(os)]_"
+    foreach myFile [glob sf*/bin/kbs* sf85/bin/tksqlite*] {
+      file copy -force $myFile $myPrefix[file tail $myFile]
+    }
+    if {![file exists sf.net/kbs.tgz]} {
+      puts "+++ [clock format [clock seconds] -format %T] kbs.tgz"
+      Run tar czf sf.net/kbs.tgz kbs.tcl sources
+    }
+  }
+}
 Package __ {
   Source {
     if {![file exists sf.net]} { file mkdir sf.net }
@@ -2032,7 +2080,7 @@ Package __ {
     puts "+++ [clock format [clock seconds] -format %T] 8.5 -vq -mk"
     Run {*}$MYEXE -builddir=sf85 -r -vq -mk install kbskit8.5
     puts "+++ [clock format [clock seconds] -format %T] 8.5 -vq-bi"
-    set my [list bwidget1.8.0 gridplus2.5 icons1.2 img1.4 itcl3.4 itk3.4 iwidgets4.0.2 memchan2.2.1 mentry3.3 ral0.9.1 rbc0.1 sqlite3.6.20 tablelist4.12 tcllib1.11 tclx8.4 tdom0.8.2 thread2.6.5 tkcon tklib0.5 tktable2.10 treectrl2.2.9 trofs0.4.4 udp1.0.8 wcb3.2 xotcl1.6.5]
+    set my [list bwidget1.8.0 gridplus2.5 icons1.2 img1.4 itcl3.4 itk3.4 iwidgets4.0.2 memchan2.2.1 mentry3.3 ral0.9.1 rbc0.1 sqlite3.7.2 tablelist5.2 tcllib1.12 tclx8.4 thread2.6.5 tkcon tklib0.5 tktable2.10 treectrl2.2.9 trofs0.4.4 udp1.0.8 wcb3.2 xotcl1.6.6]
     Run {*}$MYEXE -builddir=sf85 -r -vq-bi -bi=$my install kbskit8.5
     puts "+++ [clock format [clock seconds] -format %T] 8.5 tksqlite"
     Run {*}$MYEXE -builddir=sf85 -r install tksqlite0.5.8
@@ -2050,191 +2098,213 @@ Package __ {
   }
 }
 #-------------------------------------------------------------------------------
-Package itcl4.0b3 {
-  Require { Use tcl8.6 }
-  Source {
-    Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -r itcl-4-0b3 itcl
-  }
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared\
-        --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys]\
-        --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib\
-        [Get 64bit] [Get threads] [Get symbols]
-  }
-  Make { Run make }
-  Install { Run make install-binaries install-libraries }
-}
-#-------------------------------------------------------------------------------
 #***v* Package/_TODO_blt
 # SOURCE
 Package _TODO_blt {
-  Source { Cvs blt.cvs.sourceforge.net:/cvsroot/blt }
+  Source {Cvs blt.cvs.sourceforge.net:/cvsroot/blt}
   Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
+    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols] blt_with_ft2_include_dir=no blt_with_ft2_lib_dir=no
   }
-  Make { Run make }
+  Make {Run make}
 }
 #-------------------------------------------------------------------------------
-#***v* Package/_TODO_fossil TODO find a way to get sources from fossi
+#***v* Package/_TODO_fossil
 # SOURCE
 Package _TODO_fossil {
-  Source { Link fossil }
+  Source {Link fossil}
   Configure {}
   Make {
     set ::MYLIB "-lz [Get TCL_LIBS]"
     Run env SRCDIR=[Get srcdir]/src BCC=[Get CC] TCC=[Get CC] LIB=$MYLIB make -f
- [Get srcdir]/src/main.mk }
-  Install { file copy -force [Get builddir]/_TODO_fossil/fossil [Get builddir]/bin/fossil }
+ [Get srcdir]/src/main.mk
+  }
+  Install {file copy -force [Get builddir]/_TODO_fossil/fossil [Get builddir]/bin/fossil}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/_TODO_nap6.3.1
 # SOURCE
 Package _TODO_nap6.3.1 {
-  Source { Cvs tcl-nap.cvs.sourceforge.net:/cvsroot/tcl-nap -r nap-6-3-1 tcl-nap }
+  Source {Cvs tcl-nap.cvs.sourceforge.net:/cvsroot/tcl-nap -r nap-6-3-1 tcl-nap}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
   }
-  Make { Run make binaries }
-  Install { Run make install-binaries }
-  Clean { Run make clean }
+  Make {Run make binaries}
+  Install {Run make install-binaries}
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/_TODO_tensor4.0
 # SOURCE
 Package _TODO_tensor4.0 {
-  Source { Http http://www.eecs.umich.edu/~mckay/computer/tensor4.0a1.tar.gz }
+  Source {Http http://www.eecs.umich.edu/~mckay/computer/tensor4.0a1.tar.gz}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys]
   }
-  Make { Run make }
-  Install { Run make install }
-  Clean { Run make clean }
-  Test { Run make check }
+  Make {Run make}
+  Install {Run make install}
+  Clean {Run make clean }
+  Test {Run make check}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/_TODO_tkpath0.3
 # SOURCE
 Package _TODO_tkpath0.3 {
-  Source { Cvs tclbitprint.cvs.sourceforge.net:/cvsroot/tclbitprint tkpath }
+  Source {Cvs tclbitprint.cvs.sourceforge.net:/cvsroot/tclbitprint tkpath}
   Configure {
 # Only works with additional libraries p.e. cairo
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
   }
-  Make { Run make }
-  Install { Run make install-binaries install-libraries install-lib-binaries }
-  Clean { Run make clean }
+  Make {Run make}
+  Install {Run make install-binaries install-libraries install-lib-binaries}
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/bwidget1.8.0
 # SOURCE
 Package bwidget1.8.0 {
-  Source {
-    Cvs tcllib.cvs.sourceforge.net:/cvsroot/tcllib -r bwidget-1_8_0 bwidget
-  }
+  Source {Cvs tcllib.cvs.sourceforge.net:/cvsroot/tcllib -r bwidget-1_8_0 bwidget}
   Configure {}
   Install {
     file delete -force [Get builddir]/lib/[file tail [Get srcdir]]
     file copy -force [Get srcdir] [Get builddir]/lib
+  }
+  Test {
+    cd [Get builddir]/lib/bwidget1.8.0/demo
+    Run [Get kitgui] demo.tcl
+  }
+}
+#-------------------------------------------------------------------------------
+#***v* Package/bwidget1.9.2
+# SOURCE
+Package bwidget1.9.2 {
+  Source {Cvs tcllib.cvs.sourceforge.net:/cvsroot/tcllib -r bwidget-1_9_2 bwidget}
+  Configure {}
+  Install {
+    file delete -force [Get builddir]/lib/[file tail [Get srcdir]]
+    file copy -force [Get srcdir] [Get builddir]/lib
+  }
+  Test {
+    cd [Get builddir]/lib/bwidget1.8.0/demo
+    Run [Get kitgui] demo.tcl
   }
 }
 #-------------------------------------------------------------------------------
 #***v* Package/expect5.44
 # SOURCE
 Package expect5.44 {
-  Source { Cvs expect.cvs.sourceforge.net:/cvsroot/expect -D 2009-11-15 expect }
+  Source {Cvs expect.cvs.sourceforge.net:/cvsroot/expect -D 2010-10-28 expect}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib --with-tclinclude=[Get builddir-sys]/include --with-tkinclude=[Get builddir-sys]/include [Get 64bit] [Get threads] [Get symbols]
   }
-  Make { Run make }
-  Install { Run make install }
-  Clean { Run make clean }
-  Test { Run make test }
+  Make {Run make}
+  Install {Run make install}
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/gridplus2.5
 # SOURCE
 Package gridplus2.5 {
-  Require { Use icons1.2 tablelist4.12 }
-  Source { Http http://www.satisoft.com/tcltk/gridplus2/download/gridplus.zip }
+  Require {Use icons1.2 tablelist5.2}
+  Source {Http http://www.satisoft.com/tcltk/gridplus2/download/gridplus.zip}
   Configure {}
-  Install { Tcl }
+  Install {Tcl}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/icons1.2
 # SOURCE
 Package icons1.2 {
-  Source { Http http://www.satisoft.com/tcltk/icons/icons.tgz }
+  Source {Http http://www.satisoft.com/tcltk/icons/icons.tgz}
   Configure {}
-  Install { Tcl }
+  Install {Tcl}
 }
 #-------------------------------------------------------------------------------
-#***v* Package/img1.4 TODO windows check
+#***v* Package/img1.4
 # SOURCE
 Package img1.4 {
-  Source {
-    Svn https://tkimg.svn.sourceforge.net:/svnroot/tkimg/trunk -r 228
-  }
+  Source {Svn https://tkimg.svn.sourceforge.net:/svnroot/tkimg/trunk -r 306}
   Configure {
-    #TODO feature request, dtplite is sometimes not available
-    Patch [Get srcdir]/Makefile.in 144\
+    #bug #3098106 install failed because of missing dtplite
+    Patch [Get srcdir]/Makefile.in 149\
 {install: collate install-man
 } {install: collate
 }
+    #bug # double definition boolean under windows
+    Patch [Get srcdir]/compat/libjpeg/jconfig.cfg 23\
+{typedef unsigned char boolean;} {#ifndef __TKIMG_H__
+typedef unsigned char boolean;
+#endif
+}
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib
   }
-  Make { Run make }
+  Make {Run make}
   Install {
     Run make install
-    Libdir Img1.4
+    Libdir Img1.4;#TEST
   }
-  Clean { Run make clean }
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/itcl3.4
 # SOURCE
 Package itcl3.4 {
-  Source { Cvs incrtcl.cvs.sourceforge.net:/cvsroot/incrtcl -D 2009-11-15 incrTcl }
+  Source {Cvs incrtcl.cvs.sourceforge.net:/cvsroot/incrtcl -D 2010-10-28 incrTcl}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/itcl/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get symbols]
   }
-  Make { Run make }
-  Install { Run make install-binaries install-libraries }
-  Clean { Run make clean }
+  Make {Run make}
+  Install {Run make install-binaries install-libraries install-doc}
+  Clean {Run make clean}
+  Test {Run make test}
+}
+#-------------------------------------------------------------------------------
+#***v* Package/itcl4.0b5
+# SOURCE
+Package itcl4.0b5 {
+  Require {Use tcl8.6}
+  Source {Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -r itcl-4-0b5 itcl}
+  Configure {
+    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
+  }
+  Make {Run make}
+  Install {Run make install}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/itk3.4
 # SOURCE
 Package itk3.4 {
-  Require { Use itcl3.4 }
-  Source { Link itcl3.4 }
+  Require {Use itcl3.4}
+  Source {Link itcl3.4}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/itk/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get symbols]
   }
-  Make { Run make }
-  Install { Run make install-binaries install-libraries }
-  Clean { Run make clean }
+  Make {Run make}
+  Install {Run make install-binaries install-libraries}
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
-#***v* Package/iwidgets4.0.2 #TODO write bug report for patch
+#***v* Package/iwidgets4.0.2
 # SOURCE
 Package iwidgets4.0.2 {
-  Require { Use itk3.4 }
-  Source { Cvs incrtcl.cvs.sourceforge.net:/cvsroot/incrtcl -D 2009-11-15 iwidgets 
+  Require {Use itk3.4}
+  Source {
+    Cvs incrtcl.cvs.sourceforge.net:/cvsroot/incrtcl -D 2010-10-28 iwidgets 
     Patch [Get srcdir]/Makefile.in 72 {		  @LD_LIBRARY_PATH_VAR@="$(EXTRA_PATH):$(@LD_LIBRARY_PATH_VAR@)"}  {		  LD_LIBRARY_PATH="$(EXTRA_PATH):$(@LD_LIBRARY_PATH_VAR@)"}
   }
   Configure {
     Run env CC=[Get CC] TCLSH_PROG=[Get builddir-sys]/bin/tclsh85 WISH_PROG=[Get builddir-sys]/bin/wish [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-itcl=[Get srcdir-sys]/../itcl3.4
   }
-  Make { Run make }
-  Install { Run make install }
-  Clean { Run make clean }
-  Test { Run make test }
+  Make {Run make}
+  Install {Run make install}
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/kbskit0.4
 # SOURCE
 Package kbskit0.4 {
-  Source { Cvs kbskit.cvs.sourceforge.net:/cvsroot/kbskit -r kbskit_0_4 kbskit }
+  Source {Cvs kbskit.cvs.sourceforge.net:/cvsroot/kbskit -r kbskit_0_4 kbskit}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/kbskit8.5
@@ -2246,7 +2316,7 @@ Package kbskit8.5 {
     if {[lsearch -glob [Get kit] {vq*}] != -1} { Use vqtcl4.1-static }
     if {[lsearch -glob [Get kit] {mk*}] != -1} { Use mk4tcl2.4.9.7-static itcl3.4 }
   }
-  Source { Link kbskit0.4 }
+  Source {Link kbskit0.4}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
   }
@@ -2286,8 +2356,11 @@ Package kbskit8.5 {
       Run make MYCLI=$MYCLI MYGUI=$MYGUI MYXFT=$MYXFT MYVQ=$MYVQ MYKITVQ=$MYKITVQ MYMK=$MYMK MYKITMK=$MYKITMK MYKITBI=[Get bi] all-$my
     }
   }
-  Install { foreach my [Get kit] { Run make install-$my } }
-  Clean { Run make clean}
+  Install {foreach my [Get kit] {Run make install-$my}}
+  Test {;# start program and paste following commands:
+# catch {package req x}; foreach p [lsort [package names]] {puts "$p=[catch {package req $p}]"}
+  }
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/kbskit8.6
@@ -2295,11 +2368,11 @@ Package kbskit8.5 {
 Package kbskit8.6 {
   Require {
     Use kbskit0.4 sdx.kit
-    Use tk8.6-static tk8.6 vfs1.4-static zlib1.2.3-static thread2.6.5 {*}[Get bi]
-    if {[lsearch -glob [Get kit] {vq*}] != -1} { Use vqtcl4.1-static }
-    if {[lsearch -glob [Get kit] {mk*}] != -1} { Use mk4tcl2.4.9.7-static itcl4.0b3}
+    Use tk8.6-static tk8.6 vfs1.4-static zlib1.2.3-static {*}[Get bi]
+    if {[lsearch -glob [Get kit] {vq*}] != -1} {Use vqtcl4.1-static}
+    if {[lsearch -glob [Get kit] {mk*}] != -1} {Use mk4tcl2.4.9.7-static}
   }
-  Source { Link kbskit0.4 }
+  Source {Link kbskit0.4}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
   }
@@ -2324,11 +2397,11 @@ Package kbskit8.6 {
       }
     }
     if {[string equal [Get threads] {--enable-threads}]} {
-      set MYKITVQ "thread2.6.5 tdbc1.0b1 itcl4.0b3"
-      set MYKITMK "thread2.6.5 tdbc1.0b1 itcl4.0b3"
+      set MYKITVQ "thread2.6.6 tdbc1.0b16 itcl4.0b5"
+      set MYKITMK "thread2.6.6 tdbc1.0b16 itcl4.0b5"
     } else {
-      set MYKITVQ "tdbc1.0b1 itcl4.0b3"
-      set MYKITMK "tdbc1.0b1 itcl4.0b3"
+      set MYKITVQ "tdbc1.0b16 itcl4.0b5"
+      set MYKITMK "tdbc1.0b16 itcl4.0b5"
     }
     if {$::tcl_platform(os) == "Linux"} {
       set MYXFT "-lXft"
@@ -2339,62 +2412,54 @@ Package kbskit8.6 {
       Run make MYCLI=$MYCLI MYGUI=$MYGUI MYXFT=$MYXFT MYVQ=$MYVQ MYKITVQ=$MYKITVQ MYMK=$MYMK MYKITMK=$MYKITMK MYKITBI=[Get bi] all-$my
     }
   }
-  Install { foreach my [Get kit] { Run make install-$my } }
-  Clean { Run make clean}
+  Install {foreach my [Get kit] {Run make install-$my}}
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/memchan2.2.1
 # SOURCE
 Package memchan2.2.1 {
-  Source {
-    Cvs memchan.cvs.sourceforge.net:/cvsroot/memchan -D 2009-11-15 memchan
-  }
+  Source {Cvs memchan.cvs.sourceforge.net:/cvsroot/memchan -D 2010-10-28 memchan}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get symbols] [Get 64bit] [Get threads]
   }
-  Make { Run make binaries }
+  Make {Run make binaries}
   Install {
     Run make install-binaries
     Libdir Memchan2.2.1
   }
-  Clean { Run make clean }
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/mentry3.3
 # SOURCE
 Package mentry3.3 {
-  Require { Use wcb3.2 }
-  Source { Http http://www.nemethi.de/mentry/mentry3.3.tar.gz }
+  Require {Use wcb3.2}
+  Source {Http http://www.nemethi.de/mentry/mentry3.3.tar.gz}
   Configure {}
-  Install { Tcl }
+  Install {Tcl}
 }
 #-------------------------------------------------------------------------------
-#***v* Package/mk4tcl2.4.9.7 TODO sources, build check
+#***v* Package/mk4tcl2.4.9.7
 # SOURCE
 Package mk4tcl2.4.9.7 {
-  Source {
-    Svn svn://svn.equi4.com/metakit/trunk -r 4720
-  }
+  Source {Svn svn://svn.equi4.com/metakit/trunk -r 4720}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/mk4tcl2.4.9.7-static
 # SOURCE
 Package mk4tcl2.4.9.7-static {
-  Source { Link mk4tcl2.4.9.7 }
+  Source {Link mk4tcl2.4.9.7}
   Configure {
     #TODO bug report
-    Patch [Get srcdir]/tcl/mk4tcl.cpp 2536 {EXTERN} {extern "C" DLLEXPORT}
-    Patch [Get srcdir]/tcl/mk4tcl.cpp 2540 {EXTERN} {extern "C" DLLEXPORT}
-    Patch [Get srcdir]/tcl/mk4tcl.cpp 2544 {EXTERN} {extern "C" DLLEXPORT}
-    Patch [Get srcdir]/tcl/mk4tcl.cpp 2548 {EXTERN} {extern "C" DLLEXPORT}
     Patch [Get srcdir]/unix/Makefile.in 46 {CXXFLAGS = $(CXX_FLAGS)} {CXXFLAGS = -DSTATIC_BUILD $(CXX_FLAGS)}
     #TODO INCLUDE SunOS cc with problems on wide int
     if {$::tcl_platform(os) == "SunOS" && [Get CC] == "cc"} {
-      Patch [Get srcdir]/tcl/mk4tcl.h 9 "#include <tcl.h>\n\n" "#include <tcl.h>\n#undef TCL_WIDE_INT_TYPE\n"
+      Patch [Get srcdir]/../sources/mk4tcl2.4.9.7/tcl/mk4tcl.h 9 "#include <tcl.h>\n\n" "#include <tcl.h>\n#undef TCL_WIDE_INT_TYPE\n"
     }
     Run env CC=[Get CC] [Get srcdir-sys]/unix/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/include [Get 64bit] [Get threads] [Get symbols]
   }
-  Make { Run make tcl }
+  Make {Run make tcl}
   Install {
     Run make install
     Libdir Mk4tcl
@@ -2404,69 +2469,78 @@ Package mk4tcl2.4.9.7-static {
 #***v* Package/ral0.9.1
 # SOURCE
 Package ral0.9.1 {
-  Source { Cvs tclral.cvs.sourceforge.net:/cvsroot/tclral -r VERSION_0_9_1 . }
+  Source {Cvs tclral.cvs.sourceforge.net:/cvsroot/tclral -r VERSION_0_9_1 .}
   Configure {
     if {[Get sys] eq {unix}} {
       file attributes [Get srcdir]/tclconfig/install-sh -permissions u+x
     }
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
   }
-  Make {
-    Run make CPPFLAGS=-I[Get srcdir-sys]/../tcl8.5/libtommath binaries
+  Make {Run make CPPFLAGS=-I[Get srcdir-sys]/../tcl8.5/libtommath binaries}
+  Install {Run make install-binaries}
+  Clean {Run make clean}
+}
+#-------------------------------------------------------------------------------
+#***v* Package/rbc0.1
+# SOURCE
+Package rbc0.1 {
+  Source {Svn https://rbctoolkit.svn.sourceforge.net/svnroot/rbctoolkit/trunk/rbc -r 48}
+  Configure {
+    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols] [Get aqua]
   }
-  Install { Run make install-binaries }
-  Clean { Run make clean }
+  Make {Run make}
+  Install {Run make install}
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/robodoc4.99.36
 # SOURCE
 Package robodoc4.99.36 {
-  Source { Http http://www.xs4all.nl/~rfsber/Robo/DistSource/robodoc-4.99.36.tar.gz }
+  Source {Http http://www.xs4all.nl/~rfsber/Robo/DistSource/robodoc-4.99.36.tar.gz}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys]
   }
-  Make { Run make }
-  Install { Run make install }
-  Clean { Run make clean }
-  Test { Run make check }
-}
-#-------------------------------------------------------------------------------
-#***v* Package/sdx0.0 TODO definition
-# SOURCE
-Package sdx0.0 {
-  Source {
-    Svn svn://svn.equi4.com/sdx/trunk -r 4720
-  }
-  Configure {}
-  Make { Kit sdx }
-  Install { Kit sdx }
-  Clean { file delete -force sdx.vfs }
-  Test { Kit sdx }
+  Make {Run make}
+  Install {Run make install}
+  Clean {Run make clean}
+  Test {Run make check}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/sdx.kit
 # SOURCE
 Package sdx.kit {
-  Source { Http http://www.equi4.com/pub/sk/sdx.kit }
+  Source {Http http://www.equi4.com/pub/sk/sdx.kit}
   Configure {}
-  Install { file copy -force [Get srcdir] [Get builddir]/bin }
+  Install {file copy -force [Get srcdir] [Get builddir]/bin}
+}
+#-------------------------------------------------------------------------------
+#***v* Package/sdx0.0
+# SOURCE
+Package sdx0.0 {
+  Source {Svn svn://svn.equi4.com/sdx/trunk}
+  Configure {}
+  Make {Kit sdx}
+  Install {Kit sdx}
+  Clean {file delete -force sdx.vfs}
+  Test {Kit sdx}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/snack2.2
 # SOURCE
 Package snack2.2 {
-  Source { Http http://www.speech.kth.se/snack/dist/snack2.2.10.tar.gz }
+  Source {Http http://www.speech.kth.se/snack/dist/snack2.2.10.tar.gz}
   Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] -libdir=[Get builddir-sys]/lib --includedir=[Get builddir-sys]/include --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib }
-  Make { Run make }
-  Install { Run make install }
-  Clean { Run make clean }
+    Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] -libdir=[Get builddir-sys]/lib --includedir=[Get builddir-sys]/include --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib}
+  Make {Run make}
+  Install {Run make install}
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
-#***v* Package/sqlite3.6.20
+#***v* Package/sqlite3.7.2
 # SOURCE
-Package sqlite3.6.20 {
-  Source { Http http://www.sqlite.org/sqlite-3_6_20-tea.tar.gz }
+Package sqlite3.7.2 {
+  Source {Http http://www.sqlite.org/sqlite-3_7_2-tea.tar.gz}
   Configure {
     if {[Get sys] eq {unix}} {
       file attributes [Get srcdir]/configure -permissions u+x
@@ -2474,24 +2548,24 @@ Package sqlite3.6.20 {
     }
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] [Get symbols] [Get threads] [Get 64bit]
   }
-  Make { Run make }
-  Install { Run make install-binaries }
-  Clean { Run make clean }
+  Make {Run make}
+  Install {Run make install-binaries}
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
-#***v* Package/tablelist4.12
+#***v* Package/tablelist5.2
 # SOURCE
-Package tablelist4.12 {
-  Source { Http http://www.nemethi.de/tablelist/tablelist4.12.tar.gz }
+Package tablelist5.2 {
+  Source {Http http://www.nemethi.de/tablelist/tablelist5.2.tar.gz}
   Configure {}
-  Install { Tcl }
+  Install {Tcl}
 }
 #-------------------------------------------------------------------------------
-#***v* Package/tcl8.5 TODO mkstemp.c wie in 8.6 unter compat/
+#***v* Package/tcl8.5
 # SOURCE
 Package tcl8.5 {
   Source {
-    Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -r core-8-5-8 tcl 
+    Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -r core-8-5-9 tcl 
     # because of IRIX mkstemp() bug -> fixed in 8.6
     # sourceforge.net/projects/tcl -> Tracker -> ID: 878333
     if {$::tcl_platform(os) eq {IRIX64}} {
@@ -2537,41 +2611,35 @@ Package tcl8.5 {
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] [Get 64bit] [Get threads] [Get symbols]
   }
-  Make { Run make }
-  Install { Run make install-binaries install-libraries install-private-headers }
-  Clean { Run make clean }
-  Test { Run make test }
+  Make {Run make}
+  Install {Run make install-binaries install-libraries install-private-headers}
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/tcl8.5-static
 # SOURCE
 Package tcl8.5-static {
-  Source { Link tcl8.5 }
+  Source {Link tcl8.5}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] [Get 64bit] [Get threads] [Get symbols]
   }
-  Make { Run make }
-  Install { Run make install-binaries install-libraries install-private-headers }
-  Clean { Run make clean }
-  Test { Run make test }
+  Make {Run make}
+  Install {Run make install-binaries install-libraries install-private-headers}
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/tcl8.6
 # SOURCE
+#  Source {Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -r core-8-6-b1 tcl}
 Package tcl8.6 {
-  Source {
-    Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -r core-8-6-b1 tcl 
-  }
+  Source {Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -D 2010-10-28 tcl}
   Configure {
-    Patch [Get srcdir]/win/Makefile.in 809\
-{	          $$i/configure --with-tcl=$(PWD)}\
-{	          $$i/configure --with-tcl=$(LIB_INSTALL_DIR)}
-    if {[Get sys] eq {unix}} {
-      file attributes [Get srcdir]/pkgs/tdbc/tclconfig/install-sh -permissions u+x
-    }
+    Patch [Get srcdir]/win/Makefile.in 777 {	          $$i/configure --with-tcl=$(PWD)} {	          $$i/configure --with-tcl=$(LIB_INSTALL_DIR)}
     Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] [Get 64bit] [Get threads] [Get symbols]
   }
-  Make { Run make }
+  Make {Run make}
   Install {
     Run make install-binaries install-libraries install-private-headers install-packages
     if {[Get sys] eq {win}} {
@@ -2583,57 +2651,57 @@ Package tcl8.6 {
       }
     }
   }
-  Clean { Run make clean }
-  Test { Run make test }
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/tcl8.6-static
 # SOURCE
 Package tcl8.6-static {
-  Source { Link tcl8.6 }
+  Source {Link tcl8.6}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] [Get 64bit] [Get threads] [Get symbols]
   }
-  Make { Run make }
-  Install { Run make install-binaries install-libraries install-private-headers }
-  Clean { Run make clean }
-  Test { Run make test }
+  Make {Run make}
+  Install {Run make install-binaries install-libraries install-private-headers}
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
-#***v* Package/tcllib1.11
+#***v* Package/tcllib1.12
 # SOURCE
-Package tcllib1.11 {
-  Source { Cvs tcllib.cvs.sourceforge.net:/cvsroot/tcllib -r tcllib-1-11-1 tcllib }
+Package tcllib1.12 {
+  Source {Cvs tcllib.cvs.sourceforge.net:/cvsroot/tcllib -r tcllib-1-12 tcllib}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys]
   }
   Make {}
-  Install { Run make install-libraries }
-  Clean { Run make clean }
-  Test { Run make test }
+  Install {Run make install-libraries}
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/tcloo0.6
 # SOURCE
 Package tcloo0.6 {
-  Source { Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -r release-0-6 oocore }
+  Source {Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -r release-0-6 oocore}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
 #    file copy -force [file join [Get srcdir] TclOO.rc] [Get makedir]
   }
-  Make { Run make }
+  Make {Run make}
   Install {
     Run make install install-private-headers
     Libdir TclOO0.6
   }
-  Clean { Run make clean }
-  Test { Run make test }
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/tclx8.4
 # SOURCE
 Package tclx8.4 {
-  Source { Cvs tclx.cvs.sourceforge.net:/cvsroot/tclx -D 2009-11-15 tclx}
+  Source {Cvs tclx.cvs.sourceforge.net:/cvsroot/tclx -D 2010-10-28 tclx}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
   }
@@ -2645,7 +2713,7 @@ Package tclx8.4 {
 #***v* Package/tdom0.8.2
 # SOURCE
 Package tdom0.8.2 {
-  Source { Http http://www.tdom.org/files/tDOM-0.8.2.tgz }
+  Source {Http http://www.tdom.org/files/tDOM-0.8.2.tgz}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
   }
@@ -2657,127 +2725,124 @@ Package tdom0.8.2 {
 #***v* Package/thread2.6.5
 # SOURCE
 Package thread2.6.5 {
-  Source {
-    Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -D 2009-11-15 thread
-  }
+  Source {Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -D 2010-10-28 thread}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get symbols]
   }
-  Make { Run make }
-  Install { Run make install-binaries }
-  Clean { Run make clean }
+  Make {Run make}
+  Install {Run make install-binaries}
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/thread2.6.5-static
 # SOURCE
 Package thread2.6.5-static {
-  Source { Link thread2.6.5 }
+  Source {Link thread2.6.5}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get symbols]
   }
-  Make { Run make }
-  Install { Run make install-binaries }
-  Clean { Run make clean }
+  Make {Run make}
+  Install {Run make install-binaries}
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/tk8.5
 # SOURCE
 Package tk8.5 {
-  Require { Use tcl8.5 }
-  Source { Cvs tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -r core-8-5-8 tk }
+  Require {Use tcl8.5}
+  Source {Cvs tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -r core-8-5-9 tk}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols] [Get aqua]
   }
-  Make { Run make }
-  Install { Run make install-binaries install-libraries install-private-headers }
-  Clean { Run make clean }
-  Test { Run make test }
+  Make {Run make}
+  Install {Run make install-binaries install-libraries install-private-headers}
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/tk8.5-static
 # SOURCE
 Package tk8.5-static {
-  Require { Use tcl8.5-static }
-  Source { Link tk8.5 }
+  Require {Use tcl8.5-static}
+  Source {Link tk8.5}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols] [Get aqua]
   }
-  Make { Run make }
-  Install { Run make install-binaries install-libraries install-private-headers }
-  Clean { Run make clean }
-  Test { Run make test }
+  Make {Run make}
+  Install {Run make install-binaries install-libraries install-private-headers}
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/tk8.6
 # SOURCE
+#  Source {Cvs tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -r core-8-6-b1 tk}
 Package tk8.6 {
-  Require { Use tcl8.6 }
-  Source {
-    Cvs tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -r core-8-6-b1 tk
-  }
+  Require {Use tcl8.6}
+  Source {Cvs tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -D 2010-10-28 tk}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols] [Get aqua]
   }
-  Make { Run make }
-  Install { Run make install-binaries install-libraries install-private-headers }
-  Clean { Run make clean }
-  Test { Run make test }
+  Make {Run make}
+  Install {Run make install-binaries install-libraries install-private-headers}
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/tk8.6-static
 # SOURCE
 Package tk8.6-static {
-  Require { Use tcl8.6 tcl8.6-static }
-  Source { Link tk8.6 }
+  Require {Use tcl8.6 tcl8.6-static}
+  Source {Link tk8.6}
   Configure {
-    if {[Get sys] eq {win}} {
+    if {[Get sys] eq {win1}} {;#TEST
       Patch [Get srcdir]/[Get sys]/Makefile.in 601 {	$(CC) $(CFLAGS) $(WISH_OBJS) $(TCL_LIB_FILE) $(TK_LIB_FILE) $(LIBS) } {	$(CC) $(CFLAGS) $(WISH_OBJS) $(TCL_LIB_FILE) $(TK_LIB_FILE) $(TCL_STUB_LIB_FILE) $(LIBS) }
     }
     Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols] [Get aqua]
   }
-  Make { Run make }
-  Install { Run make install-binaries install-libraries install-private-headers }
-  Clean { Run make clean }
-  Test { Run make test }
+  Make {Run make}
+  Install {Run make install-binaries install-libraries install-private-headers}
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/tkcon
 # SOURCE
 Package tkcon {
-  Source { Cvs tkcon.cvs.sourceforge.net:/cvsroot/tkcon -D 2009-11-15 tkcon}
+  Source {Cvs tkcon.cvs.sourceforge.net:/cvsroot/tkcon -D 2010-10-28 tkcon}
   Configure {}
-  Install { Tcl }
+  Install {Tcl}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/tklib0.5
 # SOURCE
 Package tklib0.5 {
-  Source { Cvs tcllib.cvs.sourceforge.net:/cvsroot/tcllib -r tklib-0-5 tklib }
+  Source {Cvs tcllib.cvs.sourceforge.net:/cvsroot/tcllib -r tklib-0-5 tklib}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys]
   }
   Make {}
-  Install { Run make install-libraries }
-  Clean { Run make clean }
-  Test { Run make test }
+  Install {Run make install-libraries}
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/tksqlite0.5.8
 # SOURCE
 Package tksqlite0.5.8 {
-  Require { Use kbskit8.5 sdx.kit tktable2.10 treectrl2.2.9 sqlite3.6.20 }
-  Source { Http http://reddog.s35.xrea.com/software/tksqlite-0.5.8.tar.gz }
-  Configure { Kit {source $::starkit::topdir/tksqlite.tcl} Tk }
-  Make { Kit tksqlite sqlite3.6.20 tktable2.10 treectrl2.2.9}
-  Install { Kit tksqlite -vq-gui }
-  Clean { file delete -force tksqlite.vfs }
-  Test { Kit tksqlite }
+  Require {Use kbskit8.5 sdx.kit tktable2.10 treectrl2.2.9 sqlite3.7.2}
+  Source {Http http://reddog.s35.xrea.com/software/tksqlite-0.5.8.tar.gz}
+  Configure {Kit {source $::starkit::topdir/tksqlite.tcl} Tk}
+  Make {Kit tksqlite sqlite3.7.2 tktable2.10 treectrl2.2.9}
+  Install {Kit tksqlite -vq-gui}
+  Clean {file delete -force tksqlite.vfs}
+  Test {Kit tksqlite}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/tktable2.10
 # SOURCE
 Package tktable2.10 {
-  Source { Cvs tktable.cvs.sourceforge.net:/cvsroot/tktable -r tktable-2-10-0 tktable}
+  Source {Cvs tktable.cvs.sourceforge.net:/cvsroot/tktable -r tktable-2-10-0 tktable}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
   }
@@ -2792,21 +2857,20 @@ Package tktable2.10 {
 #***v* Package/tls1.6
 # SOURCE
 Package tls1.6 {
-  Source { Cvs tls.cvs.sourceforge.net:/cvsroot/tls -r tls-1-6-0 tls }
+  Source {Cvs tls.cvs.sourceforge.net:/cvsroot/tls -r tls-1-6-0 tls}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
   }
-  Make { Run make }
-  Install { Run make install }
-  Clean { Run make clean }
-  Test { Run make test }
+  Make {Run make}
+  Install {Run make install}
+  Clean {Run make clean}
+  Test {Run make test}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/treectrl2.2.9
 # SOURCE
 Package treectrl2.2.9 {
-  Source { Cvs tktreectrl.cvs.sourceforge.net:/cvsroot/tktreectrl -r VERSION2_2_9 tktreectrl
-  }
+  Source {Cvs tktreectrl.cvs.sourceforge.net:/cvsroot/tktreectrl -r VERSION2_2_9 tktreectrl}
   Configure {
     if {[Get sys] eq {unix}} {
       file attributes [Get srcdir]/configure -permissions u+x
@@ -2814,15 +2878,15 @@ Package treectrl2.2.9 {
     }
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
   }
-  Make { Run make}
-  Install { Run make install-binaries install-libraries }
+  Make {Run make}
+  Install {Run make install-binaries install-libraries}
   Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/trofs0.4.4
 # SOURCE
 Package trofs0.4.4 {
-  Source { Http http://math.nist.gov/~DPorter/tcltk/trofs/trofs0.4.4.tar.gz }
+  Source {Http http://math.nist.gov/~DPorter/tcltk/trofs/trofs0.4.4.tar.gz}
   Configure {
     Run env CC=[Get CC] TCLSH_PROG=[Get builddir-sys]/bin/tclsh85.exe [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
   }
@@ -2834,7 +2898,7 @@ Package trofs0.4.4 {
 #***v* Package/udp1.0.8
 # SOURCE
 Package udp1.0.8 {
-  Source { Cvs tcludp.cvs.sourceforge.net:/cvsroot/tcludp -r tcludp-1_0_8 tcludp }
+  Source {Cvs tcludp.cvs.sourceforge.net:/cvsroot/tcludp -r tcludp-1_0_8 tcludp}
   Configure {
     if {[Get sys] eq {unix}} {
       file attributes [Get srcdir]/tclconfig/install-sh -permissions u+x
@@ -2853,41 +2917,37 @@ Package udp1.0.8 {
 #***v* Package/vfs1.4
 # SOURCE
 Package vfs1.4 {
-  Source {
-    Cvs tclvfs.cvs.sourceforge.net:/cvsroot/tclvfs -D 2009-11-15 tclvfs
-  }
+  Source {Cvs tclvfs.cvs.sourceforge.net:/cvsroot/tclvfs -D 2010-10-28 tclvfs}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
   }
-  Make { Run make }
-  Install { Run make install-binaries }
-  Clean { Run make clean }
+  Make {Run make}
+  Install {Run make install-binaries}
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/vfs1.4-static
 # SOURCE
 Package vfs1.4-static {
-  Source { Link vfs1.4 }
+  Source {Link vfs1.4}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
   }
-  Make { Run make }
-  Install { Run make install-binaries }
-  Clean { Run make clean }
+  Make {Run make}
+  Install {Run make install-binaries}
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/vqtcl4.1
 # SOURCE
 Package vqtcl4.1 {
-  Source {
-    Svn svn://svn.equi4.com/vlerq/branches/v4/tcl -r 4720
-  }
+  Source {Svn svn://svn.equi4.com/vlerq/branches/v4/tcl -r 4720}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/vqtcl4.1-static
 # SOURCE
 Package vqtcl4.1-static {
-  Source { Link vqtcl4.1 }
+  Source {Link vqtcl4.1}
   Configure {
 #TODO bug report
     Patch [Get srcdir]/generic/vlerq.c 42 {#if !defined(_BIG_ENDIAN) && defined(WORDS_BIGENDIAN)} {#if defined(WORDS_BIGENDIAN)}
@@ -2897,16 +2957,16 @@ Package vqtcl4.1-static {
     set MYFLAGS "-D__[exec uname -p]__"
     Run make PKG_CFLAGS=$MYFLAGS
   }
-  Install { Run make install-binaries }
-  Clean { Run make clean }
+  Install {Run make install-binaries}
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/wcb3.2
 # SOURCE
 Package wcb3.2 {
-  Source { Http http://www.nemethi.de/wcb/wcb3.2.tar.gz }
+  Source {Http http://www.nemethi.de/wcb/wcb3.2.tar.gz}
   Configure {}
-  Install { Tcl }
+  Install {Tcl}
 }
 #-------------------------------------------------------------------------------
 #***v* Package/wikit.tkd
@@ -2920,13 +2980,13 @@ Package wikit.tkd {
 #***v* Package/wubwikit.kit
 # SOURCE
 Package wubwikit.kit {
-  Source { Http http://wubwikit.googlecode.com/files/wubwikit20090218.kit }
+  Source {Http http://wubwikit.googlecode.com/files/wubwikit20090218.kit}
 }
 #-------------------------------------------------------------------------------
-#***v* Package/xotcl1.6.5 TODO windows check
+#***v* Package/xotcl1.6.5
 # SOURCE
 Package xotcl1.6.5 {
-  Source { Http http://media.wu-wien.ac.at/download/xotcl-1.6.5.tar.gz }
+  Source {Http http://media.wu-wien.ac.at/download/xotcl-1.6.5.tar.gz}
   Configure {
     Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
   }
@@ -2938,75 +2998,42 @@ Package xotcl1.6.5 {
   Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
-#***v* Package/z0.1
+#***v* Package/xotcl1.6.6
 # SOURCE
-Package z0.1 {
-  Source { Cvs kbskit.cvs.sourceforge.net:/cvsroot/z -r z_0_1 z }
-}
-#-------------------------------------------------------------------------------
-#***v* Package/z_c0.1
-# SOURCE
-Package z_c0.1 {
-  Require { Use z0.1 }
-  Source { Link z0.1/generic }
+Package xotcl1.6.6 {
+  Source {Http http://media.wu-wien.ac.at/download/xotcl-1.6.6.tar.gz}
   Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
+    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
   }
-  Make { Run make }
-  Install { Run make install-binaries install-libraries}
-  Clean { Run make clean }
-  Test { Run make test }
+  Make {Run make binaries libraries}
+  Install {
+#TODO    file mkdir [file join [Get builddir] lib xotcl1.6.6 apps]
+    Run make install-binaries install-libraries
+  }
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
-#***v* Package/z_tcl0.1
-# SOURCE
-Package z_tcl0.1 {
-  Require { Use z0.1 }
-  Source { Link z0.1/library }
-  Configure {}
-  Install { Tcl z_tcl0.1 }
-  Test { Run tclsh [Get srcdir-sys]/../tests/all.tcl }
-}
-#-------------------------------------------------------------------------------
-#***v* Package/zlib1.2.3 TODO sources
+#***v* Package/zlib1.2.3
 # SOURCE
 Package zlib1.2.3 {
-  Source { Http http://www.equi4.com/pub/tk/tars/zlib.tar.gz }
+  Source {Http http://www.equi4.com/pub/tk/tars/zlib.tar.gz}
 }
 #-------------------------------------------------------------------------------
-#***v* Package/zlib1.2.3-static TODO check file mkdir ..
+#***v* Package/zlib1.2.3-static
 # SOURCE
 Package zlib1.2.3-static {
-  Source { Link zlib1.2.3 }
+  Source {Link zlib1.2.3}
   Configure {
     eval file copy [glob [Get srcdir]/*] .
     set MYFLAGS "[Get TCL_EXTRA_CFLAGS] [Get TCL_CFLAGS_OPTIMIZE]"
     Run env CC=[Get CC] CFLAGS=$MYFLAGS ./configure --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys]
   }
-  Make { Run make }
+  Make {Run make}
   Install {
     file mkdir [file join [Get builddir]/share/man]
     Run make install
   }
-  Clean { Run make clean }
-}
-#-------------------------------------------------------------------------------
-#***v* Package/rbc0.1 TODO sources build check
-# SOURCE
-Package rbc0.1 {
-  Source {
-    Svn https://rbctoolkit.svn.sourceforge.net/svnroot/rbctoolkit/trunk/rbc -r 48
-  }
-  Configure {
-    if {[Get sys] eq {unix}} {
-      file attributes [Get srcdir]/tclconfig/install-sh -permissions u+x
-    }
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols] [Get aqua]
-  }
-  Make { Run make }
-  Install { Run make install }
-  Clean { Run make clean }
-  Test { Run make test }
+  Clean {Run make clean}
 }
 #-------------------------------------------------------------------------------
 };# end of DB

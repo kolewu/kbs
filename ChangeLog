@@ -1,4 +1,24 @@
+2010-??-??  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.4.1
+	* kbs.tcl:
+	changed:
+	- tcl/tk 8.5.9
+	- img 1.4 (svn #306)
+	- sqlite 3.7.2
+	- tablelist 5.2
+	- tcllib 1.12
+	- xotcl 1.6.6
+	- tdom 0.8.2 not in kbsvq8.5-bi (tdom.org missing)
+	- version from current date (2010-10-28)
+	  - tcl/tk 8.6 with thread 2.6.6 and itcl 4.0.b5
+	  - itcl 3.4
+	  - iwidgets 4.0.2
+	  - memchan 2.2.1
+	  - tclx 8.4
+	  - thread 2.6.5
+	  - vfs 1.4
 2009-11-21  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.4
 	* kbs.tcl:
 	- now use also svn to get sources
 	- fixed missing executable in recursive source builds
