@@ -175,7 +175,7 @@ options (configuration variables are available with \[Get ..\]):
   -tar=?command?    set configuration variable 'exec-tar' (default is 'tar')
   -gzip=?command?   set configuration variable 'exec-gzip' (default is 'gzip')
   -unzip=?command?  set configuration variable 'exec-unzip' (default is 'unzip')
-  Used interpreter in package scripts (default first found in '[builddir]/bin')
+  Used interpreter in package scripts (default first found in '[::kbs::config::Get builddir]/bin')
   -kitcli=?command? set configuration variable 'kitcli' (default 'kbs*cli*')
   -kitdyn=?command? set configuration variable 'kitdyn' (default 'kbs*dyn*')
   -kitgui=?command? set configuration variable 'kitgui' (default 'kbs*gui*')
