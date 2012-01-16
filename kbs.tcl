@@ -1,59 +1,55 @@
 #! /bin/sh
-#***F* KBS/kbs.tcl
-#
-# NAME
+#TODO wget http://core.tcl.tk/tcl/zip/Tcl.zip?uuid=trunk
+##
+# @file kbs.tcl
 #	Kitgen Build System
+# @mainpage
+# @synopsis{kbs.tcl ?-option? .. ?command? ..}
 #
-# SYNOPSIS
-#	kbs.tcl ?-option? .. ?command? ..
+# For available options and commands see help() or type './kbs.tcl help'.
+# Online documentation can be found at http://wiki.tcl.tk/18146
 #
-#	For available options and commands see help()
-#	or type './kbs.tcl help'.
+# The following common commands are supported:
+#	- @b help	see help()
+#	- @b doc	see doc()
+#	- @b license	see license()
+#	- @b config	see config()
+#	- @b gui	see gui()
 #
-#	The following common commands are supported:
-#	* help -- see help()
-#	* doc -- see doc()
-#	* license -- see license()
-#	* config -- see config()
-#	* gui -- see gui()
-#	The following package related commands are supported:
-#	* require -- see require()
-#	* sources -- see sources()
-#	* make -- see make()
-#	* install -- see install()
-#	* clean -- see clean()
-#	* test -- see test()
-#	* distclean -- see distclean()
+# The following package related commands are supported:
+#	- @b require	see require()
+#	- @b sources	see sources()
+#	- @b make	see make()
+#	- @b install	see install()
+#	- @b clean	see clean()
+#	- @b test	see test()
+#	- @b distclean	see distclean()
 #
-# DESCRIPTION
-#	Tcl/Tk software building environment.
-#	Build of starpacks, starkits, binary extensions and other software.
-#	Already existing package definitions can be found under Package.
+# Tcl/Tk software building environment.
+# Build of starpacks, starkits, binary extensions and other software.
+# Already existing package definitions can be found under Package.
 #
-# EXAMPLE
-#	get brief help text
-#	  ./kbs.tcl
-#	  tclsh kbs.tcl
-#	get full documentation in ./doc/kbs.html
-#	  ./kbs.tcl doc
-#	start in graphical mode
-#	  ./kbs.tcl gui
-#	build batteries included kbskit interpreter
-#	  ./kbs.tcl -r -vq-bi install kbskit8.5 
+# @examples
+# @call{get brief help text,./kbs.tcl
+#tclsh ./kbs.tcl}
+# @call{get full documentation in ./doc/kbs.html,./kbs.tcl doc}
+# @call{start in graphical mode,./kbs.tcl gui}
+# @call{build batteries included kbskit interpreter,./kbs.tcl -r -vq-bi install kbskit8.5}
+# @call{get list of available packages,./kbs.tcl list}
 #
-# AUTHOR
-#	<jcw@equi4.com> -- Initial ideas and kbskit sources
+# @author <jcw@equi4.com> Initial ideas and kbskit sources
+# @author <r.zaumseil@freenet.de> kbskit TEA extension and development
 #
-#	<r.zaumseil@freenet.de> -- kbskit TEA extension and development
+# @version 0.4.2
 #
-# COPYRIGHT
+# @copyright 
 #	Call './kbs.tcl license' or search for 'set ::kbs(license)' in this file
 #	for information on usage and redistribution of this file,
 #	and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# VERSION
-#	$Id$
-#===============================================================================
+# Startup code:
+#@verbatim
+
 # check startup dir containing current file\
 if test ! -r ./kbs.tcl ; then \
   echo "Please start from directory containing the file 'kbs.tcl'"; exit 1 ;\
@@ -67,10 +63,10 @@ esac ;\
 if test ! -d sources ; then mkdir sources; fi;\
 if test ! -x ${EXE} ; then \
   if test ! -d sources/tcl8.5 ; then \
-    ( cd sources && cvs -d :pserver:anonymous@tcl.cvs.sourceforge.net:/cvsroot/tcl -z3 co -r core-8-5-9 tcl && mv tcl tcl8.5 ) ;\
+    ( cd sources && wget http://prdownloads.sourceforge.net/tcl/tcl8.5.11-src.tar.gz && gunzip -c tcl8.5.11-src.tar.gz | tar xf - && rm tcl8.5.11-src.tar.gz && mv tcl8.5.11 tcl8.5 ) ; \
   fi ;\
   if test ! -d sources/tk8.5 ; then \
-    ( cd sources && cvs -d :pserver:anonymous@tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -z3 co -r core-8-5-9 tk && mv tk tk8.5 ) ;\
+    ( cd sources && wget http://prdownloads.sourceforge.net/tcl/tk8.5.11-src.tar.gz && gunzip -c tk8.5.11-src.tar.gz | tar xf - && rm tk8.5.11-src.tar.gz && mv tk8.5.11 tk8.5 ) ; \
   fi ;\
   mkdir -p ${PREFIX}/tcl ;\
   ( cd ${PREFIX}/tcl && ../../sources/tcl8.5/${DIR}/configure --disable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} && make install-binaries install-libraries ) ;\
@@ -79,18 +75,15 @@ if test ! -x ${EXE} ; then \
   ( cd ${PREFIX}/tk && ../../sources/tk8.5/${DIR}/configure --enable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} --with-tcl=${PREFIX}/lib && make install-binaries install-libraries ) ;\
 fi ;\
 exec ${EXE} "$0" ${1+"$@"}
+#@endverbatim
 #===============================================================================
-
-#***N* KBS/::
-# SOURCE
 catch {wm withdraw .};# do not show toplevel in command line mode
-#-------------------------------------------------------------------------------
 
-#***v* ::/$::kbs
-# DESCRIPTION
-#	Array variable with static informations.
-# SOURCE
-set ::kbs(version) {0.4.1};# current version and version of used kbskit
+##	Array variable with static informations.
+#	- @b version	current version and version of used kbskit
+#	- @b license	license information
+variable ::kbs
+set ::kbs(version) {0.4.2};# current version and version of used kbskit
 set ::kbs(license) {
 This software is copyrighted by Rene Zaumseil (the maintainer).
 The following terms apply to all files associated with the software
@@ -124,25 +117,19 @@ FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.  THIS SOFTWARE
 IS PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND DISTRIBUTORS HAVE
 NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
 MODIFICATIONS.}
-#-------------------------------------------------------------------------------
+#===============================================================================
 
-#***N* KBS/::kbs
-# DESCRIPTION
-#	The namespace contain the external callable functions.
+##	This namespace contain the external callable functions.
 namespace eval ::kbs {
-# SOURCE
   namespace export help version kbs list info gui
   namespace export require source configure make install clean distclean
-#-------------------------------------------------------------------------------
 }
+#-------------------------------------------------------------------------------
 
-#***f* ::kbs/help()
-# DESCRIPTION
-#	Display usage help message.
-#	This is also the default action if no command was given.
-# EXAMPLE
-#  ./kbs.tcl help
-# SOURCE
+##	Display usage help message.
+# @note	This is also the default action if no command was given.
+# @examples
+# @call{display usage help message,./kbs.tcl help}
 proc ::kbs::help {} {
   puts "[::kbs::config::Get application]
 Usage: kbs.tcl ?options? command ?args?
@@ -159,14 +146,8 @@ options (configuration variables are available with \[Get ..\]):
                     (default is 'gcc' or existing environment variable 'CC')
   -bi=?package ..?  set configuration variable 'bi' (default is '')
                     to list of packages for use in batteries included builds
-  --enable-symbols
-  --disable-symbols set configuration variable 'symbols'
-  --enable-64bit
-  --disable-64bit   set configuration variable '64bit'
-  --enable-threads
-  --disable-threads set configuration variable 'threads'
-  --enable-aqua
-  --disable-aqua    set configuration variable 'aqua'
+  --enable-*
+  --disable-*       set configuration variable '-*'
   Used external programs (default values are found with 'auto_execok'):
   -make=?command?   set configuration variable 'exec-make'
                     (default is first found 'gmake' or 'make')
@@ -175,6 +156,9 @@ options (configuration variables are available with \[Get ..\]):
   -tar=?command?    set configuration variable 'exec-tar' (default is 'tar')
   -gzip=?command?   set configuration variable 'exec-gzip' (default is 'gzip')
   -unzip=?command?  set configuration variable 'exec-unzip' (default is 'unzip')
+  -wget=?command?   set configuration variable 'exec-wget' (default is 'wget')
+  -doxygen=?command? set configuration variable 'exec-doxygen'
+                    (default is 'doxygen') you need at least version 1.7.5
   Used interpreter in package scripts (default first found in '[::kbs::config::Get builddir]/bin')
   -kitcli=?command? set configuration variable 'kitcli' (default 'kbs*cli*')
   -kitdyn=?command? set configuration variable 'kitdyn' (default 'kbs*dyn*')
@@ -234,8 +218,8 @@ Startup configuration:
 The following external programs are needed:
   * C-compiler, C++ compiler for metakit based programs (see -CC=)
   * make with handling of VPATH variables (gmake) (see -make=)
-  * cvs, svn, tar, gzip, unzip to get and extract sources
-    (see -cvs= -svn= -tar= -gzip= and -unzip= options)
+  * cvs, svn, tar, gzip, unzip, wget to get and extract sources
+    (see -cvs= -svn= -tar= -gzip= -unzip= -wget= options)
   * msys (http://sourceforge.net/project/showfiles.php?group_id=10894) is
     used to build under Windows. You need to put the kbs-sources inside
     the msys tree (/home/..).
@@ -243,104 +227,49 @@ The following external programs are needed:
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs/doc()
-# DESCRIPTION
-#	Create documentation from source file.
-# EXAMPLE
-#	create public documentation:
-#	  ./kbs.tcl doc
-#	create documentation for everything:
-#	  ./kbs.tcl doc --internal --source_line_numbers
-# INPUTS
-# * args
-#	additional arguments for the 'robodoc' call
-#	see also <http://sourceforge.net/projects/robodoc/>
-# SOURCE
-proc ::kbs::doc {args} {
+##	Create documentation from source file.
+# @examples
+# @call{create public documentation,./kbs.tcl doc}
+proc ::kbs::doc {} {
   set myPwd [pwd]
   if {![file readable kbs.tcl]} {error "missing file ./kbs.tcl"}
   file mkdir doc
-  set myFd [open [file join doc kbs.rc] w]
-  puts $myFd "
-items:
-  NAME
-  AUTHOR
-  COPYRIGHT
-  VERSION
-  SYNOPSIS
-  INPUTS
-  OUTPUTS
-  RETURN
-  DESCRIPTION
-  EXAMPLE
-  SOURCE
-item order:
-  NAME
-  AUTHOR
-  COPYRIGHT
-  VERSION
-  SYNOPSIS
-  INPUTS
-  OUTPUTS
-  RETURN
-  DESCRIPTION
-  EXAMPLE
-  SOURCE
-source items:
-  SOURCE
-options:
-  --src .
-  --doc ./doc/kbs
-  --singledoc
-  --cmode
-  --toc
-  --index
-  --sections
-  --documenttitle \"[::kbs::config::Get application]\"
-  --html
-  --nopre
-headertypes:
-  F  Files             robo_files       3
-  N  Namespace         robo_namespace   2
-  P  Package           robo_package     1
-ignore files:
-  build*
-  sources
-  CVS
-accept files:
-  kbs.tcl
-header markers:
-  #***
-end markers:
-  #===
-  #---
-"
+  set myFd [open Doxyfile w]
+  puts $myFd "PROJECT_NUMBER		= [clock format [clock seconds] -format {%Y%m%d}]"
+  puts $myFd {
+PROJECT_NAME		= "Kitgen Build System"
+OUTPUT_DIRECTORY	= ./doc
+JAVADOC_AUTOBRIEF	= YES
+QT_AUTOBRIEF		= YES
+ALIASES			=
+ALIASES += copyright="\par Copyright:"
+ALIASES += examples="\par Examples:"
+ALIASES += synopsis{1}="\par Synopsis:\n@verbatim \1 @endverbatim"
+ALIASES += call{2}="\1 @verbatim \2 @endverbatim"
+EXTRACT_ALL		= NO
+INPUT			= kbs.tcl
+SOURCE_BROWSER		= YES
+INLINE_SOURCES		= YES
+STRIP_CODE_COMMENTS	= NO
+GENERATE_TREEVIEW	= YES
+GENERATE_LATEX          = NO
+}
   close $myFd
-  install robodoc\*
-  cd $myPwd
-  ::kbs::config::Run [::kbs::config::Get builddir]/bin/robodoc --rc doc/kbs.rc {*}$args
+  exec $::kbs::config::_(exec-doxygen)
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs/license()
-# DESCRIPTION
-#	Display license information.
-# EXAMPLE
-#	display license information:
-#	  ./kbs.tcl license
-# SOURCE
+##	Display license information.
+# @examples
+# @call{display license information,./kbs.tcl license}
 proc ::kbs::license {} {
   puts $::kbs(license)
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs/config()
-# DESCRIPTION
-#	Display names and values of configuration variables useable with 'Get'.
-# EXAMPLE
-#	display used values:
-#	  ./kbs.tcl config
-# SOURCE
+##	Display names and values of configuration variables useable with 'Get'.
+# @examples
+# @call{display used values,./kbs.tcl config}
 proc ::kbs::config {} {
   foreach myName [lsort [array names ::kbs::config::_]] {
     puts [format {%-20s = %s} "\[Get $myName\]" [::kbs::config::Get $myName]]
@@ -348,183 +277,144 @@ proc ::kbs::config {} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs/gui()
-# DESCRIPTION
-#	Start graphical user interface.
-# EXAMPLE
-#	simple start with default options:
-#    ./kbs.tcl gui
-# INPUTS
-#	* args	currently not used
-# SOURCE
+##	Start graphical user interface.
+# @examples
+# @call{simple start with default options,./kbs.tcl gui}
+# 
+# @param[in] args	currently not used
 proc ::kbs::gui {args} {
   ::kbs::gui::_init $args
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs/list()
-# DESCRIPTION
-#	Print available packages.
-# EXAMPLE
-#	list all packages starting with 'kbs'
-#	  ./kbs.tcl list kbs\*
-#	list all definitions of packages starting with 'kbs'
-#	  ./kbs.tcl list kbs\* Package
-#	list specific definition parts of packages starting with 'kbs'
-#	  ./kbs.tcl list kbs\* Require Source
-# INPUTS
-# * pattern -- global search pattern for packages (default '*')
-# * list    -- which part should be printed too (default '')
-# SOURCE
+##	Print available packages.
+# @examples
+# @call{list all packages starting with 'kbs',./kbs.tcl list kbs\*}
+# @call{list all definitions of packages starting with 'kbs',./kbs.tcl list kbs\* Package}
+# @call{list specific definition parts of packages starting with 'kbs',./kbs.tcl list kbs\* Require Source}
+# 
+# @param[in] pattern	global search pattern for packages (default '*')
+# @param[in] args	which part should be printed (default all)
 proc ::kbs::list {{pattern *} args} {
   if {$args eq {}} {
     puts [lsort -dict [array names ::kbs::config::packagescript $pattern]]
   } else {
     foreach myPkg [lsort -dict [array names ::kbs::config::packagescript $pattern]] {
-      puts "#***v* Package/$myPkg\n# SOURCE"
-      puts "Package $myPkg {"
+      set myName	""
+      set myVersion	""
+      foreach myChar [split $myPkg {}] {
+	if {$myVersion == "" && [string match {[A-Za-z_} $myChar]} {
+	  append myName $myChar
+        } else {
+	  append myVersion $myChar
+        }
+      }
+      puts "## @page	$myName\n# @version	$myVersion\n#@verbatim\nPackage $myPkg {"
       foreach {myCmd myScript} $::kbs::config::packagescript($myPkg) {
         if {$args eq {Package} || [lsearch $args $myCmd] >= 0} {
           puts "  $myCmd {$myScript}"
         }
       }
-      puts "}\n#-------------------------------------------------------------------------------"
+      puts "}\n#@endverbatim\n#-------------------------------------------------------------------------------"
     }
   }
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs/require()
-# DESCRIPTION
-#	Call the 'Require' part of the package definition.
+##	Call the 'Require' part of the package definition.
 #	Can be used to show dependencies of packages.
-# EXAMPLE
-#	show dependencies of package:
-#	  ./kbs.tcl -r require kbskit8.5
-# INPUTS
-# * args -- list of packages
-# SOURCE
+# @examples
+# @call{show dependencies of package,./kbs.tcl -r require kbskit8.5}
+# 
+# @param[in] args	list of packages
 proc ::kbs::require {args} {
   ::kbs::config::_init {Require} $args
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs/sources()
-# FUNCTON
-#	Call the 'Require' and 'Source' part of the package definition
+##	Call the 'Require' and 'Source' part of the package definition
 #	to get the sources of packages.
 #	Sources are installed under './sources/'.
-# EXAMPLE
-#	get the sources of a package:
-#	  ./kbs.tcl sources kbskit8.5
-#	get the sources of a package and its dependencies:
-#	  ./kbs.tcl -r sources kbskit8.5
-# INPUTS
-# * args -- list of packages
-# SOURCE
+# @examples
+# @call{get the sources of a package,./kbs.tcl sources kbskit8.5}
+# @call{get the sources of a package and its dependencies,./kbs.tcl -r sources kbskit8.5}
+# 
+# @param[in] args	list of packages
 proc ::kbs::sources {args} {
   ::kbs::config::_init {Require Source} $args
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs/configure()
-# DESCRIPTION
-#	Call the 'Require', 'Source' and 'Configure' part of the package
+##	Call the 'Require', 'Source' and 'Configure' part of the package
 #	definition. The configuration is done in 'makedir'.
-# EXAMPLE
-#	configure the package:
-#	  ./kbs.tcl configure kbskit8.5
-#	configure the package and its dependencies:
-#	  ./kbs.tcl -r configure kbskit8.5
-# INPUTS
-# * args -- list of packages
-# SOURCE
+# @examples
+# @call{configure the package,./kbs.tcl configure kbskit8.5}
+# @call{configure the package and its dependencies,./kbs.tcl -r configure kbskit8.5}
+# 
+# @param[in] args	list of packages
 proc ::kbs::configure {args} {
   ::kbs::config::_init {Require Source Configure} $args
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs/make()
-# DESCRIPTION
-#	Call the 'Require', 'Source', 'Configure' and 'Make' part of the
+##	Call the 'Require', 'Source', 'Configure' and 'Make' part of the
 #	package definition. The build is done in 'makedir'.
-# EXAMPLE
-#	make the package:
-#	  ./kbs.tcl make kbskit8.5
-#	make the package and its dependencies:
-#	  ./kbs.tcl -r make kbskit8.5
-# INPUTS
-# * args -- list of packages
-# SOURCE
+# @examples
+# @call{make the package,./kbs.tcl make kbskit8.5}
+# @call{make the package and its dependencies,./kbs.tcl -r make kbskit8.5}
+# 
+# @param[in] args	list of packages
 proc ::kbs::make {args} {
   ::kbs::config::_init {Require Source Configure Make} $args
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs/test()
-# DESCRIPTION
-#	Call the 'Require', 'Source', 'Make' and 'Test' part of the package
+##	Call the 'Require', 'Source', 'Make' and 'Test' part of the package
 #	definition. The testing starts in 'makedir'
-# EXAMPLE
-#	test the package:
-#	  ./kbs.tcl test kbskit8.5
-# INPUTS
-# * args -- list of packages
-# SOURCE
+# @examples
+# @call{test the package,./kbs.tcl test kbskit8.5}
+# 
+# @param[in] args	list of packages
 proc ::kbs::test {args} {
   ::kbs::config::_init {Require Source Make Test} $args
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs/install()
-# DESCRIPTION
-#	Call the 'Require', 'Source', 'Configure', 'Make' and 'Install' part of
+##	Call the 'Require', 'Source', 'Configure', 'Make' and 'Install' part of
 #	the package definition. The install dir is 'builddir'.
-# EXAMPLE
-#	install the package:
-#	  ./kbs.tcl install kbskit8.5
-#	install the package and its dependencies:
-#	  ./kbs.tcl -r install kbskit8.5
-# INPUTS
-# * args -- list of packages
-# SOURCE
+# @examples
+# @call{install the package,./kbs.tcl install kbskit8.5}
+# @call{install the package and its dependencies,./kbs.tcl -r install kbskit8.5}
+# 
+# @param[in] args	list of packages
 proc ::kbs::install {args} {
   ::kbs::config::_init {Require Source Configure Make Install} $args
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs/clean()
-# DESCRIPTION
-#	Call the 'Clean' part of the package definition.
+##	Call the 'Clean' part of the package definition.
 #	The clean starts in 'makedir'.
-# EXAMPLE
-#	clean the package:
-#	  ./kbs.tcl clean kbskit8.5
-#	clean the package and its dependencies:
-#	  ./kbs.tcl -r clean kbskit8.5
-# INPUTS
-# * args -- list of packages
-# SOURCE
+# @examples
+# @call{clean the package,./kbs.tcl clean kbskit8.5}
+# @call{clean the package and its dependencies,./kbs.tcl -r clean kbskit8.5}
+# 
+# @param[in] args	list of packages
 proc ::kbs::clean {args} {
   ::kbs::config::_init {Clean} $args
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs/distclean()
-# DESCRIPTION
-#	Remove the 'makedir' of the package so everything can be rebuild again
+##	Remove the 'makedir' of the package so everything can be rebuild again.
 #	This is necessary if there are problems in the configuration part of
 #	the package.
-# EXAMPLE
-#	remove the package:
-#	  ./kbs.tcl distclean kbskit8.5
-#	remove the package and its dependencies:
-#	  ./kbs.tcl -r distclean kbskit8.5
-# INPUTS
-# * args -- list of packages
-# SOURCE
+# @examples
+# @call{remove the package,./kbs.tcl distclean kbskit8.5}
+# @call{remove the package and its dependencies,./kbs.tcl -r distclean kbskit8.5}
+# 
+# @param[in] args	list of packages
 proc ::kbs::distclean {args} {
-  set myBody [info body ::kbs::config::Source];# save old body
+  # save old body
+  set myBody [info body ::kbs::config::Source]
   proc ::kbs::config::Source [info args ::kbs::config::Source] {
     set myDir [Get makedir]
     if {[file exist $myDir]} {
@@ -533,137 +423,100 @@ proc ::kbs::distclean {args} {
     }
   }
   ::kbs::config::_init {Require Source} $args
-  proc ::kbs::config::Source [info args ::kbs::config::Source] $myBody;# restore old body
+  # restore old body
+  proc ::kbs::config::Source [info args ::kbs::config::Source] $myBody
 }
-#-------------------------------------------------------------------------------
 #===============================================================================
 
-#***N* KBS/::kbs::config
-# DESCRIPTION
-#	Contain internally used functions and variables.
+##	Contain internally used functions and variables.
 namespace eval ::kbs::config {
-# SOURCE
   namespace export Run Get Patch Require Source Configure Make Install Clean Test
 #-------------------------------------------------------------------------------
 
-#***iv* ::kbs::config/$maindir
-# DESCRIPTION
-#	Internal variable containing top level script directory.
-# SOURCE
+##	Internal variable containing top level script directory.
   variable maindir [file normalize [file dirname [info script]]]
 #-------------------------------------------------------------------------------
 
-#***iv* ::kbs::config/$packages
-# DESCRIPTION
-#	Internal variable with parsed package definitions from *.kbs files.
-#       'Inlude' parts are resolved.
-# SOURCE
+##	Internal variable with parsed package definitions from *.kbs files.
+#       'Include' parts are resolved.
   variable packages
 
 #-------------------------------------------------------------------------------
-#***iv* ::kbs::config/$packagescript
-# DESCRIPTION
-#	Internal variable with original package definitions from *.kbs files.
-# SOURCE
+##	Internal variable with original package definitions from *.kbs files.
   variable packagescript
 #-------------------------------------------------------------------------------
 
-#***iv* ::kbs::config/$package
-# DESCRIPTION
-#	Internal variable containing current package name.
-# SOURCE
+##	Internal variable containing current package name.
   variable package
 #-------------------------------------------------------------------------------
 
-#***iv* ::kbs::config/$ready
-# DESCRIPTION
-#	Internal variable containing list of already prepared packages.
-# SOURCE
+##	Internal variable containing list of already prepared packages.
   variable ready [list]
 #-------------------------------------------------------------------------------
 
-#***v* ::kbs::config/$ignore
-# DESCRIPTION
-#	If set (-i or -ignore switch) then proceed in case of errors.
-# EXAMPLE
-#	try to build all given packages:
-#	  ./kbs.tcl -i install bwidget\* mentry\*
-#	  ./kbs.tcl -ignore install bwidget\* mentry\*
-# SOURCE
+##	If set (-i or -ignore switch) then proceed in case of errors.
+# @examples
+# @call{try to build all given packages,
+#./kbs.tcl -i install bwidget\* mentry\*
+#./kbs.tcl -ignore install bwidget\* mentry\*
+# }
   variable ignore
   set ignore 0
 #-------------------------------------------------------------------------------
 
-#***v* ::kbs::config/$recursive
-# DESCRIPTION
-#	If set (-r or -recursive switch) then all packages under 'Require'
+##	If set (-r or -recursive switch) then all packages under 'Require'
 #	are also used.
-# EXAMPLE
-#	build all packages recursively:
-#	  ./kbs.tcl -r install kbskit8.5
-#	  ./kbs.tcl -recursive install kbskit8.5
-# SOURCE
+# @examples
+# @call{build all packages recursively,
+#./kbs.tcl -r install kbskit8.5
+#./kbs.tcl -recursive install kbskit8.5
+# } 
   variable recursive
   set recursive 0
 #-------------------------------------------------------------------------------
 
-#***v* ::kbs::config/$verbose
-# DESCRIPTION
-#	If set (-v or -verbose switch) then all stdout will be removed.
-# EXAMPLE
-#	print additional information while processing:
-#	  ./kbs.tcl -v -r install bwidget\*
-#	  ./kbs.tcl -verbose -r install bwidget\*
-# SOURCE
+##	If set (-v or -verbose switch) then all stdout will be removed.
+#
+# @examples
+# @call{print additional information while processing,
+#./kbs.tcl -v -r install bwidget\*
+#./kbs.tcl -verbose -r install bwidget\*
+# }
   variable verbose
   set verbose 0
 #-------------------------------------------------------------------------------
 
-#***v* ::kbs::config/$pkgfile
-# DESCRIPTION
-#	Define startup kbs package definition file.
+##	Define startup kbs package definition file.
 #	Default is empty and use only internal definitions.
-# EXAMPLE
-#	start with own package definition file:
-#	  ./kbs.tcl -pkgfile=/my/package/file list
-# SOURCE
+# @examples
+# @call{start with own package definition file,./kbs.tcl -pkgfile=/my/package/file list}
   variable pkgfile
   set pkgfile {}
 #-------------------------------------------------------------------------------
 
-#***v* ::kbs::config/$_
-# DESCRIPTION
-#	The array variable contain usefull information of the current building
+##	The array variable contain usefull information of the current building
 #	process. All variables are provided with default values.
 #	Changing of the default values can be done in the following order:
-#	* file '$(HOME)/.kbsrc' and file './kbsrc' -- Lines starting with '#'
+#	- file '$(HOME)/.kbsrc' and file './kbsrc' -- Lines starting with '#'
 #	  are treated as comments and removed. All other lines are concatenated
 #	  and used as command line arguments.
-#	* environment variable 'KBSRC' -- The contents of this variable is used
+#	- environment variable 'KBSRC' -- The contents of this variable is used
 #	  as command line arguments.
-#	* command line 
+#	- command line 
 #	It is also possible to set values in the 'Package' definition file
 #	outside the 'Package' definition (p.e. 'set ::kbs::config::_(CC) g++').
-# EXAMPLE
-#	build debugging version:
-#	  ./kbs.tcl -CC=/my/cc --enable-symbols install tclx8.4
-#	create kbsmk8.5-[cli|dyn|gui] interpreter:
-#	  ./kbs.tcl -mk install kbskit8.5
-#	create kbsvq8.5-bi interpreter with packages:
-#	  ./kbs.tcl -vq-bi -bi="tclx8.4 tdom0.8.2" install kbskit8.5
-#	get list of available packages with:
-#	  ./kbs.tcl list
-# SOURCE
+# @examples
+# @call{build debugging version,./kbs.tcl -CC=/my/cc --enable-symbols install tclx8.4}
+# @call{create kbsmk8.5-[cli|dyn|gui] interpreter,./kbs.tcl -mk install kbskit8.5}
+# @call{create kbsvq8.5-bi interpreter with packages,./kbs.tcl -vq-bi -bi="tclx8.4 tdom0.8.2" install kbskit8.5}
+# @call{get list of available packages with,./kbs.tcl list}
+# 
   variable _
   if {[info exist ::env(CC)]} {;# used compiler
     set _(CC)		$::env(CC)
   } else {
     set _(CC)		{gcc}
   }
-  set _(aqua)		{--enable-aqua};# tcl
-  set _(symbols)	{--disable-symbols};# build without debug symbols
-  set _(threads)	{--enable-threads};# build with thread support
-  set _(64bit)		{--disable-64bit};# build without 64 bit support
   if {$::tcl_platform(platform) eq {windows}} {;# configuration system subdir
     set _(sys)		{win}
   } else {
@@ -675,6 +528,8 @@ namespace eval ::kbs::config {
   set _(exec-tar)	[lindex "[auto_execok tar] tar" 0]
   set _(exec-gzip)	[lindex "[auto_execok gzip] gzip" 0]
   set _(exec-unzip)	[lindex "[auto_execok unzip] unzip" 0]
+  set _(exec-wget)	[lindex "[auto_execok wget] wget" 0]
+  set _(exec-doxygen)	[lindex "[auto_execok doxygen] doxygen" 0]
   set _(kitcli)		{}
   set _(kitdyn)		{}
   set _(kitgui)         {}
@@ -690,12 +545,9 @@ namespace eval ::kbs::config {
 #-------------------------------------------------------------------------------
 };# end of ::kbs::config
 
-#***if* ::kbs::config/_sys()
-# DESCRIPTION
-#	Return platfrom specific file name p.e. windows C:\... -> /...
-# INPUTS
-# * file -- file name to convert
-# SOURCE
+##	Return platfrom specific file name p.e. windows C:\... -> /...
+#
+# @param[in] file	file name to convert
 proc ::kbs::config::_sys {file} {
   if {$::tcl_platform(platform) eq {windows} && [string index $file 1] eq {:}} {
     return "/[string tolower [string index $file 0]][string range $file 2 end]"
@@ -705,15 +557,12 @@ proc ::kbs::config::_sys {file} {
 }
 #-------------------------------------------------------------------------------
 
-#***if* ::kbs::config/_init()
-# DESCRIPTION
-#	Initialize variables with respect to given configuration options
+##	Initialize variables with respect to given configuration options
 #	and command.
 #	Process command in separate interpreter.
-# INPUTS
-# * used -- list of available commands
-# * list -- list of packages
-# SOURCE
+#
+# @param[in] used	list of available commands
+# @param[in] list	list of packages
 proc ::kbs::config::_init {used list} {
   variable packages
   variable package
@@ -762,15 +611,12 @@ proc ::kbs::config::_init {used list} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Package()
-# SYNOPSIS
-#	Package name script
-# DESCRIPTION
-#	The 'Package' command is available in definition files.
+##	The 'Package' command is available in definition files.
 #	All 'Package' definitions will be saved for further use.
-# INPUTS
-# * name   -- unique name of package
-# * script --	contain one or more of the following definitions.
+# @synopsis{Package name script}
+#
+# @param[in] name	unique name of package
+# @param[in] script	contain one or more of the following definitions.
 #		The common functions 'Run', 'Get' and 'Patch' can be used in
 #		every 'script'. For a detailed description and command specific
 #		additional functions look in the related commands.
@@ -783,7 +629,6 @@ proc ::kbs::config::_init {used list} {
 #	Special commands:
 #	'Include package'  -- include current 'package' script. The command
 #	use the current definitions (snapshot semantic).
-# SOURCE
 proc ::kbs::config::Package {name script} {
   variable packages
   variable packagescript
@@ -806,17 +651,13 @@ proc ::kbs::config::Package {name script} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Require()
-# SYNOPSIS
-#	Require script
-# DESCRIPTION
-#	Evaluate the given script.
+##	Evaluate the given script.
 #	Add additional packages with the 'Use' function.
-# INPUTS
-#  * script --	containing package dependencies.
+# @synopsis{Require script}
+#
+#  @param script	containing package dependencies.
 #	Available functions are: 'Run', 'Get', 'Patch'
 #	'Use ?package..?' -- see Require-Use()
-# SOURCE
 proc ::kbs::config::Require {script} {
   variable recursive
   if {$recursive == 0} return
@@ -833,15 +674,11 @@ proc ::kbs::config::Require {script} {
 
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Require-Use()
-# SYNOPSIS
-#	Use ?package? ..
-# DESCRIPTION
-#	Define dependencies used with '-r' switch.
+##	Define dependencies used with '-r' switch.
 #	The given 'Package's in args will then be recursively called.
-# INPUTS
-# * args - one or more 'Package' names
-# SOURCE
+# @synopsis{Use ?package? ..}
+#
+# @param[in] args	one or more 'Package' names
 proc ::kbs::config::Require-Use {args} {
   variable packages
   variable ready
@@ -867,7 +704,7 @@ proc ::kbs::config::Require-Use {args} {
         if {$ignore == 0} {
           return -code error "Require failed for: $package"
         }
-        foreach my {Link Cvs Svn Tgz Zip Http Script Kit Tcl Libdir} {
+        foreach my {Link Cvs Svn Tgz Zip Http Wget Script Kit Tcl Libdir} {
           interp alias $interp $my;# clear specific procedures
         }
       }
@@ -885,36 +722,33 @@ proc ::kbs::config::Require-Use {args} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Source()
-# SYNOPSIS
-#	Source script
-# DESCRIPTION
-#	Procedure to build source tree of current 'Package' definition.
-# INPUTS
-# * script --	one or more of the following functions to get the sources
+##	Procedure to build source tree of current 'Package' definition.
+# @synopsis{Source script}
+#
+# @param[in] script	one or more of the following functions to get the sources
 #		of the current package. The sources should be placed under
 #		'./sources/'.
 #	Available functions are: 'Run', 'Get', 'Patch'
 #	'Cvs path ...' - call 'cvs -d path co -d 'srcdir' ...'
 #	'Svn path'     - call 'svn co path 'srcdir''
 #	'Http path'    - call 'http get path', unpack *.tar.gz or *.tgz files
+#	'Wget file'    - call 'wget file', unpack *.tar.gz or *.tgz files
 #	'Tgz file'     - call 'tar xzf file'
 #	'Zip file'     - call 'unzip file'
 #	'Link package' - use sources from "package"
 #	'Script text'  - eval 'text'
-# SOURCE
 proc ::kbs::config::Source {script} {
   variable interp
   variable package
   variable _
 
   ::kbs::gui::_state -running "" -package $package
-  foreach my {Script Http Link Cvs Svn Tgz Zip} {
+  foreach my {Script Http Wget Link Cvs Svn Tgz Zip} {
     interp alias $interp $my {} ::kbs::config::Source- $my
   }
   array set _ {srcdir {} srcdir-sys {}}
   $interp eval $script
-  foreach my {Script Http Link Cvs Svn Tgz Zip} {
+  foreach my {Script Http Wget Link Cvs Svn Tgz Zip} {
     interp alias $interp $my
   }
   if {$_(srcdir) eq {}} {
@@ -924,21 +758,19 @@ proc ::kbs::config::Source {script} {
 }
 #-------------------------------------------------------------------------------
 
-#***if* ::kbs::config/Source-()
-# SYNOPSIS
+##	Process internal 'Source' commands.
+# @synopsis{
 #	Link dir
 #	Script tcl-script
 #	Cvs path args
 #	Svn args
 #	Http url
+#	Wget file
 #	Tgz file
-#	Zip file
-# DESCRIPTION
-#	Process internal 'Source' commands.
-# INPUTS
-# * type - one of the valid source types, see Source().
-# * args - depending on the given 'type' 
-# SOURCE
+#	Zip file}
+#
+# @param[in] type	one of the valid source types, see Source().
+# @param[in] args	depending on the given 'type' 
 proc ::kbs::config::Source- {type args} {
   variable maindir
   variable package
@@ -983,7 +815,7 @@ proc ::kbs::config::Source- {type args} {
         if {$args eq {}} { set args [file tail $myPath] }
         if {[string first @ $myPath] < 0} {set myPath :pserver:anonymous@$myPath}
         puts "=== Source $type $package"
-        if {[catch {Run cvs -d $myPath -z3 co -P -d $package {*}$args} myMsg]} {
+if {[catch {Run cvs -d $myPath -z3 co -P -d $package {*}$args} myMsg]} {
           file delete -force $myDir
           if {$verbose} {puts $myMsg}
         }
@@ -997,20 +829,13 @@ proc ::kbs::config::Source- {type args} {
           if {$verbose} {puts $myMsg}
         }
       }
-    } Http {
+    } Http - Wget {
       set myDir [file join $maindir sources $package]
       if {![file exists $myDir]} {
         set myFile [file normalize ./[file tail $args]]
         puts "=== Source $type $package"
         if {[catch {
-          package require http
-          set fd [open $myFile w]
-          set t [http::geturl $args -binary 1 -channel $fd]
-          close $fd
-          scan [http::code $t] {HTTP/%f %d} ver ncode
-          #if {$_(-verbose)} {puts [http::status $t]}
-          http::cleanup $t
-          if {$ncode != 200 || [file size $myFile] == 0} {error "fetch failed"}
+          Run $_(exec-wget) $args
           # unpack if necessary
           switch -glob $myFile {
             *.tgz - *.tar.gz {
@@ -1042,8 +867,8 @@ proc ::kbs::config::Source- {type args} {
           file delete -force $myDir.tmp
           file mkdir $myDir.tmp
           cd $myDir.tmp
-          if {$type eq {Tgz}} {exec $_(exec-gzip) -dc $args | $_(exec-tar) xf -}
-          if {$type eq {Zip}} {exec $_(exec-unzip) $args}
+          if {$type eq {Tgz}} {Run $_(exec-gzip) -dc $args | $_(exec-tar) xf -}
+          if {$type eq {Zip}} {Run $_(exec-unzip) $args}
           cd [file join $maindir sources]
           set myList [glob $myDir.tmp/*]
           if {[llength $myList] == 1 && [file isdir $myList]} {
@@ -1067,17 +892,13 @@ proc ::kbs::config::Source- {type args} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Configure()
-# SYNOPSIS
-#	Configure script
-# DESCRIPTION
-#	If 'makedir' not exist create it and eval script.
-# INPUTS
-#  * script --	tcl script to evaluate with one or more of the following
+##	If 'makedir' not exist create it and eval script.
+# @synopsis{Configure script}
+#
+# @param[in] script	tcl script to evaluate with one or more of the following
 #		functions to help configure the current package
 #	Available functions are: 'Run', 'Get', 'Patch'
 #	'Kit ?main.tcl? ?pkg..?' -- see Configure-Kit()
-# SOURCE
 proc ::kbs::config::Configure {script} {
   variable verbose
   variable interp
@@ -1086,30 +907,58 @@ proc ::kbs::config::Configure {script} {
   if {[file exist $myDir]} return
   puts "=== Configure $myDir"
   if {$verbose} {puts $script}
-  foreach my {Kit} {
+  foreach my {Config Kit} {
     interp alias $interp $my {} ::kbs::config::Configure-$my
   }
   file mkdir $myDir
   $interp eval [list cd $myDir]
   $interp eval $script
-  foreach my {Kit} {interp alias $interp $my}
+  foreach my {Config Kit} {interp alias $interp $my}
 }
 #-------------------------------------------------------------------------------
+##	Call 'configure' with options.
+# @examples
+#	Configure [Get builddir-sys]/configure --enabled-shared=no
+# @param [in] path	Path to configure script
+# @param [in] args	Additional configure arguments
+proc ::kbs::config::Configure-Config {path args} {
+  variable _
 
-#***f* ::kbs::config/Configure-Kit()
-# SYNOPSIS
-#	Kit maincode args
-# DESCRIPTION
-#	This function create a 'makedir'/main.tcl with:
-#	* common startup code
-#	* require statement for each package in 'args' argument
-#	* application startup from 'maincode' argument
-# EXAMPLE
+  # collect available options
+  set myOpts ""
+  foreach l [split [exec env $path/configure --help] \n] {
+    set l [string trimleft $l]
+    if {[string range $l 0 8] == "--enable-"} {
+      set myOpt [lindex [split $l " \t="] 0]
+      set myOpt [string range [lindex [split $l " \t="] 0] 8 end]
+      if {[info exists _($myOpt)]} {
+        append myOpts " $_($myOpt)"
+      }
+    } elseif {[string range $l 0 12] == "--exec-prefix"} {
+      append myOpts " --exec-prefix=[Get builddir-sys]"
+    } elseif {[string range $l 0 7] == "--prefix"} {
+      append myOpts " --prefix=[Get builddir-sys]"
+    } elseif {[string range $l 0 16] == "--with-tclinclude"} {
+    } elseif {[string range $l 0 9] == "--with-tcl"} {
+      append myOpts " --with-tcl=[Get builddir-sys]/lib"
+    } elseif {[string range $l 0 15] == "--with-tkinclude"} {
+    } elseif {[string range $l 0 8] == "--with-tk"} {
+      append myOpts " --with-tk=[Get builddir-sys]/lib"
+    }
+  }
+  #TODO CFLAGS
+  Run env CC=[Get CC] TCLSH_PROG=[Get builddir-sys]/bin/tclsh85 WISH_PROG=[Get builddir-sys]/bin/wish $path/configure {*}$myOpts {*}$args
+}
+##	This function create a 'makedir'/main.tcl with:
+#	- common startup code
+#	- require statement for each package in 'args' argument
+#	- application startup from 'maincode' argument
+# @synopsis{Kit maincode args}
+# @examples
 #	Package tksqlite0.5.8 ..
-# INPUTS
-# * maincode -- startup code
-# * args     -- additional args
-# SOURCE
+# 
+# @param[in] maincode	startup code
+# @param[in] args	additional args
 proc ::kbs::config::Configure-Kit {maincode args} {
   variable _
 
@@ -1136,17 +985,13 @@ if {[catch {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Make()
-# SYNOPSIS
-#	Make script
-# DESCRIPTION
-#	Evaluate script in 'makedir'.
-# INPUTS
-# * script --	tcl script to evaluate with one or more of the following
+##	Evaluate script in 'makedir'.
+# @synopsis{Make script}
+#
+# @param[in] script	tcl script to evaluate with one or more of the following
 #		functions to help building the current package
 #	Available functions are: 'Run', 'Get', 'Patch'
 #	'Kit name ?pkglibdir..?' -- see Make-Kit()
-# SOURCE
 proc ::kbs::config::Make {script} {
   variable verbose
   variable interp
@@ -1164,26 +1009,23 @@ proc ::kbs::config::Make {script} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Make-Kit()
-# SYNOPSIS
-#	Kit name args
-# DESCRIPTION
-#	The procedure links the 'name.vfs' in to the 'makedir' and create
+##	The procedure links the 'name.vfs' in to the 'makedir' and create
 #	foreach name in 'args' a link from 'builddir'/lib in to 'name.vfs'/lib.
 #	The names in 'args' may subdirectories under 'builddir'/lib. In the
 #	'name.vfs'/lib the leading directory parts are removed.
 #	The same goes for 'name.vfs'.
-#	* Kit name ?librarydir ..?
+#	- Kit name ?librarydir ..?
 #	  Start in 'makedir'. Create 'name.vfs/lib'.
 #	  When existing link 'main.tcl' to 'name.vfs'.
 #	  Link everything from [Srcdir] into 'name.vfs'.
 #	  Link all package library dirs in ''makedir'/name.vfs'/lib
-# EXAMPLE
+# @synopsis{Kit name args}
+# @examples
 #	Package tksqlite0.5.8 ..
-# INPUTS
-# * name -- name of vfs directory (without extension) to use
-# * args -- additional args
-# SOURCE
+# 
+#
+# @param[in] name	name of vfs directory (without extension) to use
+# @param[in] args	additional args
 proc ::kbs::config::Make-Kit {name args} {
   variable _
 
@@ -1208,19 +1050,15 @@ proc ::kbs::config::Make-Kit {name args} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Install()
-# SYNOPSIS
-#	Install script
-# DESCRIPTION
-#	Eval script in 'makedir'.
-# INPUTS
-# * script --	tcl script to evaluate with one or more of the following
+##	Eval script in 'makedir'.
+# @synopsis{Install script}
+#
+# @param[in] script	tcl script to evaluate with one or more of the following
 #		functions to install the current package.
 #	Available functions are: 'Run', 'Get', 'Patch'
 #	'Libdir dirname' -- see Install-Libdir()
 #	'Kit name args'  -- see Install-Kit()
 #	'Tcl ?package?'  -- see Install-Tcl()
-# SOURCE
 proc ::kbs::config::Install {script} {
   variable verbose
   variable interp
@@ -1240,17 +1078,13 @@ proc ::kbs::config::Install {script} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Install-Libdir()
-# SYNOPSIS
-#	Libdir dirname
-# DESCRIPTION
-#	Move given 'dir' in 'builddir'tcl/lib to package name.
+##	Move given 'dir' in 'builddir'tcl/lib to package name.
 #	This function is necessary to install all packages with the same
 #	naming convention (lower case name plus version number).
-# INPUTS
-# * dirname --	original package library dir,
+# @synopsis{Libdir dirname}
+#
+# @param[in] dirname	original package library dir,
 #		not conforming lower case with version number
-# SOURCE
 proc ::kbs::config::Install-Libdir {dirname} {
   variable verbose
   variable package
@@ -1269,24 +1103,21 @@ proc ::kbs::config::Install-Libdir {dirname} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Install-Kit()
-# SYNOPSIS
-#	Kit name args
-# DESCRIPTION
-#	Without 'option' wrap kit and move to 'builddir'/bin otherwise with:
-#	-mk-cli create starpack with 'kbsmk*-cli*' executable
-#	-mk-dyn create starpack with 'kbsmk*-dyn*' executable
-#	-mk-gui create starpack with 'kbsmk*-gui*' executable
-#	-vq-cli create starpack with 'kbsvq*-cli*' executable
-#	-vq-dyn create starpack with 'kbsvq*-dyn*' executable
-#	-vq-gui create starpack with 'kbsvq*-gui*' executable
-#	... create starpack with given option as executable
-# EXAMPLE
+##	Without 'option' wrap kit and move to 'builddir'/bin otherwise with:
+#	- @b -mk-cli create starpack with 'kbsmk*-cli*' executable
+#	- @b -mk-dyn create starpack with 'kbsmk*-dyn*' executable
+#	- @b -mk-gui create starpack with 'kbsmk*-gui*' executable
+#	- @b -vq-cli create starpack with 'kbsvq*-cli*' executable
+#	- @b -vq-dyn create starpack with 'kbsvq*-dyn*' executable
+#	- @b -vq-gui create starpack with 'kbsvq*-gui*' executable
+#	- @b ... create starpack with given option as executable
+# @synopsis{Kit name args}
+#
+# @examples
 #	Package tksqlite0.5.8 ..
-# INPUTS
-# * mode -- one of configure, make, install, clean or run
-# * name -- name of vfs directory (without extension) to use
-# * args -- additional args
+# 
+# @param[in] name	name of vfs directory (without extension) to use
+# @param[in] args	additional args
 # SOURCE
 proc ::kbs::config::Install-Kit {name args} {
   variable _
@@ -1326,17 +1157,14 @@ proc ::kbs::config::Install-Kit {name args} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Install-Tcl()
-# SYNOPSIS
-#	Tcl ?pkgname?
-# DESCRIPTION
-#	Command to install tcl only packages.
+##	Command to install tcl only packages.
 #	Used in 'Install' part of 'Package' definitions.
-# EXAMPLE
+# @synopsis{Tcl ?pkgname?}
+#
+# @examples
 #	Package mentry-3.1 ..
-# INPUTS
-# * package -- install name of package, if missing then build from [Get srcdir]
-# SOURCE
+# 
+# @param[in] pkgname	install name of package, if missing then build from [Get srcdir]
 proc ::kbs::config::Install-Tcl {{pkgname {}}} {
   if {$pkgname eq {}} {
     set myDst [file join [Get builddir] lib [file tail [Get srcdir]]]
@@ -1359,17 +1187,13 @@ proc ::kbs::config::Install-Tcl {{pkgname {}}} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Test()
-# SYNOPSIS
-#	Test script
-# DESCRIPTION
-#	Eval script in 'makedir'.
-# INPUTS
-# * script --	tcl script to evaluate with one or more of the following
+##	Eval script in 'makedir'.
+# @synopsis{Test script}
+#
+# @param[in] script	tcl script to evaluate with one or more of the following
 #		functions to help testing the current package
 #		Available functions are: 'Run', 'Get', 'Patch'
 #		'Kit name args' -- see Test-Kit()
-# SOURCE
 proc ::kbs::config::Test {script} {
   variable verbose
   variable interp
@@ -1385,17 +1209,14 @@ proc ::kbs::config::Test {script} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Test-Kit()
-# SYNOPSIS
-#	Kit mode name args
-# DESCRIPTION
-#	Run kit file with given command line 'args'
-# EXAMPLE
+##	Run kit file with given command line 'args'
+# @synopsis{Kit mode name args}
+#
+# @examples
 #	Package tksqlite0.5.8 ..
-# INPUTS
-# * name -- name of vfs directory (without extension) to use
-# * args -- additional args
-# SOURCE
+# 
+# @param[in] name	name of vfs directory (without extension) to use
+# @param[in] args	additional args
 proc ::kbs::config::Test-Kit {name args} {
   variable _
 
@@ -1410,16 +1231,12 @@ proc ::kbs::config::Test-Kit {name args} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Clean()
-# SYNOPSIS
-#	Clean script
-# DESCRIPTION
-#	Eval script in 'makedir'.
-# INPUTS
-# * script --	tcl script to evaluate with one or more of the following
+##	Eval script in 'makedir'.
+# @synopsis{Clean script}
+#
+# @param[in] script	tcl script to evaluate with one or more of the following
 #		functions to help cleaning the current package.
 #		Available functions are: 'Run', 'Get', 'Patch'
-# SOURCE
 proc ::kbs::config::Clean {script} {
   variable verbose
   variable interp
@@ -1433,21 +1250,19 @@ proc ::kbs::config::Clean {script} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Get()
-# SYNOPSIS
-#	Get var
-# DESCRIPTION
-#	Return value of given variable name.
+##	Return value of given variable name.
 #	If 'var' starts with 'TCL_' tclConfig.sh will be parsed for TCL_*
 #	variables. If 'var' starts with 'TK_' tkConfig.sh will be parsed for
 #	TK_* variables.
-# INPUTS
-# * var: name of variable.
-# SOURCE
+# @synopsis{Get var}
+#
+# @param[in] var	name of variable.
 proc ::kbs::config::Get {var} {
   variable _
 
-  if {[string range $var 0 3] eq {TCL_} && ![info exists _(TCL_)]} {
+  if {[string index $var 0] eq {-}} {
+    if {![info exists _($var)]} return
+  } elseif {[string range $var 0 3] eq {TCL_} && ![info exists _(TCL_)]} {
     set myScript ""
     set myFd [open [file join $_(builddir) lib tclConfig.sh] r]
     set myC [read $myFd]
@@ -1462,8 +1277,7 @@ proc ::kbs::config::Get {var} {
     }
     eval $myScript
     set _(TCL_) 1
-  }
-  if {[string range $var 0 2] eq {TK_} && ![info exists _(TK_)]} {
+  } elseif {[string range $var 0 2] eq {TK_} && ![info exists _(TK_)]} {
     set myScript ""
     set myFd [open [file join $_(builddir) lib tkConfig.sh] r]
     set myC [read $myFd]
@@ -1483,21 +1297,18 @@ proc ::kbs::config::Get {var} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Patch()
-# SYNOPSIS
-#	Patch file lineoffste oldtext newtext
-# DESCRIPTION
-#	Patch files.
-# EXAMPLE
+##	Patch files.
+# @synopsis{Patch file lineoffste oldtext newtext}
+#
+# @examples
 #	Patch [Get srcdir]/Makefile.in 139\
 #        {INCLUDES       = @PKG_INCLUDES@ @TCL_INCLUDES@}\
 #        {INCLUDES       = @TCL_INCLUDES@}
-# INPUTS
-# * file       -- name of file to patch
-# * lineoffset -- start point of patch, first line is 1
-# * oldtext    -- part of file to replace
-# * newtext    -- replacement text
-# SOURCE
+# 
+# @param[in] file	name of file to patch
+# @param[in] lineoffset	start point of patch, first line is 1
+# @param[in] oldtext	part of file to replace
+# @param[in] newtext	replacement text
 proc ::kbs::config::Patch {file lineoffset oldtext newtext} {
   variable verbose
 
@@ -1537,16 +1348,12 @@ proc ::kbs::config::Patch {file lineoffset oldtext newtext} {
 }
 #-------------------------------------------------------------------------------
 
-#***f* ::kbs::config/Run()
-# SYNOPSIS
-#	Run args
-# DESCRIPTION
-#	The procedure call the args as external command with options.
+##	The procedure call the args as external command with options.
 #	The procedure is available in all script arguments.
 #	If the 'verbose' switch is on the 'args' will be printed.
-# INPUTS
-# * args -- containing external command
-# SOURCE
+# @synopsis{Run args}
+#
+# @param[in] args	containing external command
 proc ::kbs::config::Run {args} {
   variable _
   variable verbose
@@ -1569,12 +1376,9 @@ proc ::kbs::config::Run {args} {
 }
 #-------------------------------------------------------------------------------
 
-#***if* ::kbs::config/_configure()
-# DESCRIPTION
-#	Configure application with given command line arguments.
-# INPUTS
-# * args -- option list
-# SOURCE
+##	Configure application with given command line arguments.
+#
+# @param[in] args	option list
 proc ::kbs::config::_configure {args} {
   variable maindir
   variable pkgfile
@@ -1624,14 +1428,10 @@ proc ::kbs::config::_configure {args} {
         set recursive 1
       } -v - -verbose {
 	set verbose 1
-      } --enable-symbols - --disable-symbols {
-        set _(symbols) $myCmd
-      } --enable-64bit - --disable-64bit {;#TODO --enable-64bit-vis
-        set _(64bit) $myCmd
-      } --enable-threads - --disable-threads {
-        set _(threads) $myCmd
-      } --enable-aqua - --disable-aqua {
-        set _(aqua) $myCmd
+      } --enable-* {
+        set _([string range [lindex [split $myCmd {=}] 0] 8 end]) $myCmd
+      } --disable-* {
+        set _([string range $myCmd 9 end]) $myCmd
       } -make=* {
         set _(exec-make) [string range $myCmd 6 end]
       } -cvs=* {
@@ -1644,6 +1444,10 @@ proc ::kbs::config::_configure {args} {
         set _(exec-gzip) [string range $myCmd 6 end]
       } -unzip=* {
         set _(exec-unzip) [string range $myCmd 7 end]
+      } -wget=* {
+        set _(exec-wget) [string range $myCmd 6 end]
+      } -doxygen=* {
+        set _(exec-doxygen) [string range $myCmd 9 end]
       } -kitcli=* {
         set _(kitcli) [string range $myCmd 8 end]
       } -kitdyn=* {
@@ -1701,31 +1505,22 @@ proc ::kbs::config::_configure {args} {
 
 #===============================================================================
 
-#***iN* KBS/::kbs::gui
-# DESCRIPTION
-#	Contain variables and function of the graphical user interface.
+##	Contain variables and function of the graphical user interface.
 namespace eval ::kbs::gui {
-# SOURCE
 #-------------------------------------------------------------------------------
 
-#***iv* ::kbs::gui/$_
-# DESCRIPTION
-#	Containing internal gui state values.
-# SOURCE
+##	Containing internal gui state values.
   variable _
   set _(-command) {};# currently running command
   set _(-package) {};# current package 
   set _(-running) {};# currently executed command in 'Run'
   set _(widgets) [list];# list of widgets to disable if command is running
+}
 #-------------------------------------------------------------------------------
-};# end of ::kbs::gui
 
-#***if* ::kbs::gui/_init()
-# DESCRIPTION
-#	Build and initialize graphical user interface.
-# INPUTS
-# * args -- currently ignored
-# SOURCE
+##	Build and initialize graphical user interface.
+#
+# @param[in] args	currently ignored
 proc ::kbs::gui::_init {args} {
   variable _
 
@@ -1762,7 +1557,8 @@ proc ::kbs::gui::_init {args} {
 
   set myRow 3
   set myW 9
-  foreach myCmd {make cvs svn tar gzip unzip} {
+  foreach myCmd [lsort [array names ::kbs::config::_ exec-*]] {
+    set myCmd [string range $myCmd 5 end]
     incr myRow
     grid [::ttk::label $w.[incr myW] -anchor e -text "-${myCmd}="]\
 	-row $myRow -column 1 -sticky ew
@@ -1795,28 +1591,26 @@ proc ::kbs::gui::_init {args} {
   set w .tgl
   grid [::ttk::labelframe $w -text {Toggle options} -padding 3]\
 	-row 3 -column 1 -sticky ew
-  grid columnconfigure $w 1 -weight 1
-  grid columnconfigure $w 2 -weight 1
   grid columnconfigure $w 3 -weight 1
+  grid columnconfigure $w 6 -weight 1
 
-  grid [::ttk::label $w.1 -text {-aqua=} -anchor e]\
-	-row 2 -column 1 -sticky ew
-  grid [::ttk::checkbutton $w.2 -width 17 -onvalue --enable-aqua -offvalue --disable-aqua -variable ::kbs::config::_(aqua) -textvariable ::kbs::config::_(aqua)]\
-	-row 2 -column 2 -sticky ew
-  grid [::ttk::label $w.3 -text {-symbols=} -anchor e]\
-	-row 2 -column 3 -sticky ew
-  grid [::ttk::checkbutton $w.4 -width 17 -onvalue --enable-symbols -offvalue --disable-symbols -variable ::kbs::config::_(symbols) -textvariable ::kbs::config::_(symbols)]\
-	-row 2 -column 4 -sticky ew
-  grid [::ttk::label $w.5 -text {-64bit=} -anchor e]\
-	-row 3 -column 1 -sticky ew
-  grid [::ttk::checkbutton $w.6 -width 17 -onvalue --enable-64bit -offvalue --disable-64bit -variable ::kbs::config::_(64bit) -textvariable ::kbs::config::_(64bit)]\
-	-row 3 -column 2 -sticky ew
-  grid [::ttk::label $w.7 -text {-threads=} -anchor e]\
-	-row 3 -column 3 -sticky ew
-  grid [::ttk::checkbutton $w.8 -width 17 -onvalue --enable-threads -offvalue --disable-threads -variable ::kbs::config::_(threads) -textvariable ::kbs::config::_(threads)]\
-	-row 3 -column 4 -sticky ew
-
-  lappend _(widgets) $w.2 $w.4 $w.6 $w.8
+  set c 0
+  set r 1
+  set i 0
+  foreach myOpt {-shared -symbols -64bit -64bit-vis -xft -corefoundation -aqua -framework} {
+    grid [::ttk::label $w.[incr i] -text $myOpt= -anchor e]\
+	-row $r -column [incr c] -sticky ew
+    grid [::ttk::checkbutton $w.[incr i] -width 17\
+	-onvalue --enable$myOpt -offvalue --disable$myOpt\
+	-variable ::kbs::config::_($myOpt)\
+	-textvariable ::kbs::config::_($myOpt)]\
+	-row $r -column [incr c] -sticky ew
+    lappend _(widgets) $w.$i
+    if {$c >= 4} {
+      set c 0
+      incr r
+    }
+  }
 
   # kit build options
   set w .kit
@@ -1900,10 +1694,7 @@ proc ::kbs::gui::_init {args} {
 }
 #-------------------------------------------------------------------------------
 
-#***if* ::kbs::gui/_set_builddir()
-# DESCRIPTION
-#	Set configuration variable '::kbs::config::builddir'.
-# SOURCE
+##	Set configuration variable 'builddir'.
 proc ::kbs::gui::_set_builddir {} {
   set myDir [tk_chooseDirectory -parent . -title "Select 'builddir'"\
 	-initialdir $::kbs::config::_(builddir)]
@@ -1914,13 +1705,10 @@ proc ::kbs::gui::_set_builddir {} {
 }
 #-------------------------------------------------------------------------------
 
-#***if* ::kbs::gui/_set_exec()
-# DESCRIPTION
-#	Set configuration variable 'varname'.
-# INPUTS
-# * varname -- name of configuration variable to set
-# * title -- text to display as title of selection window
-# SOURCE
+##	Set configuration variable of given 'varname'.
+#
+# @param[in] varname	name of configuration variable to set
+# @param[in] title	text to display as title of selection window
 proc ::kbs::gui::_set_exec {varname title} {
   set myFile [tk_getOpenFile -parent . -title $title\
 	-initialdir [file dirname $::kbs::config::_($varname)]]
@@ -1929,10 +1717,7 @@ proc ::kbs::gui::_set_exec {varname title} {
 }
 #-------------------------------------------------------------------------------
 
-#***if* ::kbs::gui/_set_bi()
-# DESCRIPTION
-#	Set configuration variable '::kbs::config::_(bi)'.
-# SOURCE
+##	Set configuration variable 'bi'.
 proc ::kbs::gui::_set_bi {} {
   set my [list]
   foreach myNr [.pkg.lb curselection] {
@@ -1942,13 +1727,10 @@ proc ::kbs::gui::_set_bi {} {
 }
 #-------------------------------------------------------------------------------
 
-#***if* ::kbs::gui/_command()
-# DESCRIPTION
-#	Function to process currently selected packages and provide
+##	Function to process currently selected packages and provide
 #	feeedback results.
-# INPUTS
-# * cmd -- selected command from gui
-# SOURCE
+#
+# @param[in] cmd	selected command from gui
 proc ::kbs::gui::_command {cmd} {
   variable _
 
@@ -1977,15 +1759,11 @@ proc ::kbs::gui::_command {cmd} {
 }
 #-------------------------------------------------------------------------------
 
-#***if* ::kbs::gui/_state()
-# DESCRIPTION
-#	Change displayed state informations and update application.
-# INPUTS
-# * args -- list of option-value pairs with:
+##	Change displayed state informations and update application.
+# @param[in] args	list of option-value pairs with:
 #   -running 'text' - text to display in the 'Running:' state
 #   -package 'text' - text to display in the 'Package:' state
 #   -command 'text' - text to display in the 'Command:' state
-# SOURCE
 proc ::kbs::gui::_state {args} {
   variable _
 
@@ -1996,14 +1774,10 @@ proc ::kbs::gui::_state {args} {
 
 #===============================================================================
 
-#***f* ::/::kbs_main()
-# DESCRIPTION
-#	Parse the command line in search of options.
-#
+##	Parse the command line in search of options.
 #	Process the command line to call one of the '::kbs::*' functions
-# INPUTS
-# * argv -- list of provided command line arguments
-# SOURCE
+#
+# @param[in] argv	list of provided command line arguments
 proc ::kbs_main {argv} {
   # parse options
   if {[catch {set argv [::kbs::config::_configure {*}$argv]} myMsg]} {
@@ -2036,33 +1810,9 @@ proc ::kbs_main {argv} {
 
 # begin of DB
 namespace eval ::kbs::config {
-#-------------------------------------------------------------------------------
-#***P* KBS/Package
-# DESCRIPTION
-#	To get the complete formatted list try:
-#	  './kbs.tcl list \* Package'
-#-------------------------------------------------------------------------------
-#***v* Package/__
-# SOURCE
-Package tt {
-  Source {
-    Link ../sf.net
-  }
-  Configure {}
-  Make {
-    # do everything from the main directory
-    cd ../..
-    puts "+++ [clock format [clock seconds] -format %T] save 'sf.net/'"
-    set myPrefix "sf.net/[string map {{ } {}} $::tcl_platform(os)]_"
-    foreach myFile [glob sf*/bin/kbs* sf85/bin/tksqlite*] {
-      file copy -force $myFile $myPrefix[file tail $myFile]
-    }
-    if {![file exists sf.net/kbs.tgz]} {
-      puts "+++ [clock format [clock seconds] -format %T] kbs.tgz"
-      Run tar czf sf.net/kbs.tgz kbs.tcl sources
-    }
-  }
-}
+# @{
+## @defgroup __
+#@verbatim
 Package __ {
   Source {
     if {![file exists sf.net]} { file mkdir sf.net }
@@ -2070,22 +1820,37 @@ Package __ {
   }
   Configure {}
   Make {
+    # Build all files for distribution on sourceforge.
     # do everything from the main directory
     cd ../..
     if {$::tcl_platform(platform) == "windows"} {
-      set MYEXE "./MINGW32_NT-5.1/bin/tclsh85s.exe kbs.tcl"
+      set MYEXE "./[exec uname]/bin/tclsh85s.exe kbs.tcl"
+      set my {}
     } else {
       set MYEXE {./kbs.tcl}
+      set my expect5.45
     }
     puts "+++ [clock format [clock seconds] -format %T] 8.5 -vq -mk"
-    Run {*}$MYEXE -builddir=sf85 -r -vq -mk install kbskit8.5
+    Run {*}$MYEXE -builddir=sf85 -v -r -vq -mk install kbskit8.5
     puts "+++ [clock format [clock seconds] -format %T] 8.5 -vq-bi"
-    set my [list bwidget1.8.0 gridplus2.5 icons1.2 img1.4 itcl3.4 itk3.4 iwidgets4.0.2 memchan2.2.1 mentry3.3 ral0.9.1 rbc0.1 sqlite3.7.2 tablelist5.2 tcllib1.12 tclx8.4 thread2.6.5 tkcon tklib0.5 tktable2.10 treectrl2.2.9 trofs0.4.4 udp1.0.8 wcb3.2 xotcl1.6.6]
-    Run {*}$MYEXE -builddir=sf85 -r -vq-bi -bi=$my install kbskit8.5
+    #TODO nap7.0.0 tls1.6.1
+    lappend my\
+	bwidget1.9.5\
+	gridplus2.6\
+	icons1.2 img1.4 itcl3.4 itk3.4 iwidgets4.0.2\
+	memchan2.2.1 mentry3.5\
+	ral0.9.1 rbc0.1\
+	sqlite3.7.9\
+	tablelist5.5 tcllib1.14 tclx8.4 tdom0.8.3 thread2.6.7\
+	tkcon tklib0.5 tktable2.10 treectrl2.4.1 trofs0.4.4\
+	udp1.0.8\
+	wcb3.4\
+	xotcl1.6.7
+    Run {*}$MYEXE -builddir=sf85 -v -r -vq-bi -bi=$my install kbskit8.5
     puts "+++ [clock format [clock seconds] -format %T] 8.5 tksqlite"
-    Run {*}$MYEXE -builddir=sf85 -r install tksqlite0.5.8
+    Run {*}$MYEXE -builddir=sf85 -v -r install tksqlite0.5.8
     puts "+++ [clock format [clock seconds] -format %T] 8.6 -vq -mk"
-    Run {*}$MYEXE -builddir=sf86 -r -vq -mk install kbskit8.6
+    Run {*}$MYEXE -builddir=sf86 -v -r -vq -mk install kbskit8.6
     puts "+++ [clock format [clock seconds] -format %T] save 'sf.net/'"
     set myPrefix "sf.net/[string map {{ } {}} $::tcl_platform(os)]_"
     foreach myFile [glob sf*/bin/kbs* sf85/bin/tksqlite*] {
@@ -2097,19 +1862,9 @@ Package __ {
     }
   }
 }
-#-------------------------------------------------------------------------------
-#***v* Package/_TODO_blt
-# SOURCE
-Package _TODO_blt {
-  Source {Cvs blt.cvs.sourceforge.net:/cvsroot/blt}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols] blt_with_ft2_include_dir=no blt_with_ft2_lib_dir=no
-  }
-  Make {Run make}
-}
-#-------------------------------------------------------------------------------
-#***v* Package/_TODO_fossil
-# SOURCE
+#@endverbatim
+## @defgroup _TODO_fossil
+#@verbatim
 Package _TODO_fossil {
   Source {Link fossil}
   Configure {}
@@ -2120,47 +1875,9 @@ Package _TODO_fossil {
   }
   Install {file copy -force [Get builddir]/_TODO_fossil/fossil [Get builddir]/bin/fossil}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/_TODO_nap6.3.1
-# SOURCE
-Package _TODO_nap6.3.1 {
-  Source {Cvs tcl-nap.cvs.sourceforge.net:/cvsroot/tcl-nap -r nap-6-3-1 tcl-nap}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
-  }
-  Make {Run make binaries}
-  Install {Run make install-binaries}
-  Clean {Run make clean}
-}
-#-------------------------------------------------------------------------------
-#***v* Package/_TODO_tensor4.0
-# SOURCE
-Package _TODO_tensor4.0 {
-  Source {Http http://www.eecs.umich.edu/~mckay/computer/tensor4.0a1.tar.gz}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys]
-  }
-  Make {Run make}
-  Install {Run make install}
-  Clean {Run make clean }
-  Test {Run make check}
-}
-#-------------------------------------------------------------------------------
-#***v* Package/_TODO_tkpath0.3
-# SOURCE
-Package _TODO_tkpath0.3 {
-  Source {Cvs tclbitprint.cvs.sourceforge.net:/cvsroot/tclbitprint tkpath}
-  Configure {
-# Only works with additional libraries p.e. cairo
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
-  }
-  Make {Run make}
-  Install {Run make install-binaries install-libraries install-lib-binaries}
-  Clean {Run make clean}
-}
-#-------------------------------------------------------------------------------
-#***v* Package/bwidget1.8.0
-# SOURCE
+#@endverbatim
+## @defgroup bwidget
+#@verbatim
 Package bwidget1.8.0 {
   Source {Cvs tcllib.cvs.sourceforge.net:/cvsroot/tcllib -r bwidget-1_8_0 bwidget}
   Configure {}
@@ -2173,119 +1890,94 @@ Package bwidget1.8.0 {
     Run [Get kitgui] demo.tcl
   }
 }
-#-------------------------------------------------------------------------------
-#***v* Package/bwidget1.9.2
-# SOURCE
-Package bwidget1.9.2 {
-  Source {Cvs tcllib.cvs.sourceforge.net:/cvsroot/tcllib -r bwidget-1_9_2 bwidget}
+#@endverbatim
+## @defgroup bwidget
+#@verbatim
+Package bwidget1.9.5 {
+  Source {Cvs tcllib.cvs.sourceforge.net:/cvsroot/tcllib -r bwidget-1-9-5 bwidget}
   Configure {}
   Install {
     file delete -force [Get builddir]/lib/[file tail [Get srcdir]]
     file copy -force [Get srcdir] [Get builddir]/lib
   }
   Test {
-    cd [Get builddir]/lib/bwidget1.8.0/demo
+    cd [Get builddir]/lib/bwidget1.9.5/demo
     Run [Get kitgui] demo.tcl
   }
 }
-#-------------------------------------------------------------------------------
-#***v* Package/expect5.44
-# SOURCE
-Package expect5.44 {
-  Source {Cvs expect.cvs.sourceforge.net:/cvsroot/expect -D 2010-10-28 expect}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib --with-tclinclude=[Get builddir-sys]/include --with-tkinclude=[Get builddir-sys]/include [Get 64bit] [Get threads] [Get symbols]
-  }
+#@endverbatim
+## @defgroup expect
+#@verbatim
+Package expect5.45 {
+  Source {Cvs expect.cvs.sourceforge.net:/cvsroot/expect -r expect_5_45 expect}
+  Configure {Config [Get srcdir-sys]}
   Make {Run make}
   Install {Run make install}
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/gridplus2.5
-# SOURCE
-Package gridplus2.5 {
-  Require {Use icons1.2 tablelist5.2}
-  Source {Http http://www.satisoft.com/tcltk/gridplus2/download/gridplus.zip}
+#@endverbatim
+## @defgroup gridplus
+#@verbatim
+Package gridplus2.6 {
+  Require {Use icons1.2 tablelist5.5}
+  Source {Wget http://www.satisoft.com/tcltk/gridplus2/download/gridplus.zip}
   Configure {}
   Install {Tcl}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/icons1.2
-# SOURCE
+#@endverbatim
+## @defgroup icons
+#@verbatim
 Package icons1.2 {
-  Source {Http http://www.satisoft.com/tcltk/icons/icons.tgz}
+  Source {Wget http://www.satisoft.com/tcltk/icons/icons.tgz}
   Configure {}
   Install {Tcl}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/img1.4
-# SOURCE
+#@endverbatim
+## @defgroup img
+# @bug Configure: feature request, dtplite is sometimes not available
+#@verbatim
 Package img1.4 {
-  Source {Svn https://tkimg.svn.sourceforge.net:/svnroot/tkimg/trunk -r 306}
+  Source {Svn https://tkimg.svn.sourceforge.net:/svnroot/tkimg/trunk -r 332}
   Configure {
-    #bug #3098106 install failed because of missing dtplite
-    Patch [Get srcdir]/Makefile.in 149\
-{install: collate install-man
+    Patch [Get srcdir]/Makefile.in 149 {install: collate install-man
 } {install: collate
 }
-    #bug # double definition boolean under windows
-    Patch [Get srcdir]/compat/libjpeg/jconfig.cfg 23\
-{typedef unsigned char boolean;} {#ifndef __TKIMG_H__
-typedef unsigned char boolean;
-#endif
-}
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib
+    Config [Get srcdir-sys]
   }
   Make {Run make}
   Install {
     Run make install
-    Libdir Img1.4;#TEST
+    Libdir Img1.4
   }
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/itcl3.4
-# SOURCE
+#@endverbatim
+## @defgroup itcl
+#@verbatim
 Package itcl3.4 {
   Source {Cvs incrtcl.cvs.sourceforge.net:/cvsroot/incrtcl -D 2010-10-28 incrTcl}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/itcl/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get symbols]
-  }
+  Configure {Config [Get srcdir-sys]/itcl}
   Make {Run make}
   Install {Run make install-binaries install-libraries install-doc}
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/itcl4.0b5
-# SOURCE
-Package itcl4.0b5 {
-  Require {Use tcl8.6}
-  Source {Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -r itcl-4-0b5 itcl}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
-  }
-  Make {Run make}
-  Install {Run make install}
-  Test {Run make test}
-}
-#-------------------------------------------------------------------------------
-#***v* Package/itk3.4
-# SOURCE
+#@endverbatim
+## @defgroup itk
+#@verbatim
 Package itk3.4 {
   Require {Use itcl3.4}
   Source {Link itcl3.4}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/itk/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get symbols]
-  }
+  Configure {Config [Get srcdir-sys]/itk}
   Make {Run make}
   Install {Run make install-binaries install-libraries}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/iwidgets4.0.2
-# SOURCE
+#@endverbatim
+## @defgroup iwidgets
+# @bug Source: LD_LIBRARY_PATH setting
+#@verbatim
 Package iwidgets4.0.2 {
   Require {Use itk3.4}
   Source {
@@ -2293,33 +1985,31 @@ Package iwidgets4.0.2 {
     Patch [Get srcdir]/Makefile.in 72 {		  @LD_LIBRARY_PATH_VAR@="$(EXTRA_PATH):$(@LD_LIBRARY_PATH_VAR@)"}  {		  LD_LIBRARY_PATH="$(EXTRA_PATH):$(@LD_LIBRARY_PATH_VAR@)"}
   }
   Configure {
-    Run env CC=[Get CC] TCLSH_PROG=[Get builddir-sys]/bin/tclsh85 WISH_PROG=[Get builddir-sys]/bin/wish [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-itcl=[Get srcdir-sys]/../itcl3.4
+  Config [Get srcdir-sys] -with-itcl=[Get srcdir-sys]/../itcl3.4
   }
   Make {Run make}
   Install {Run make install}
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/kbskit0.4
-# SOURCE
+#@endverbatim
+## @defgroup kbskit
+#@verbatim
 Package kbskit0.4 {
   Source {Cvs kbskit.cvs.sourceforge.net:/cvsroot/kbskit -r kbskit_0_4 kbskit}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/kbskit8.5
-# SOURCE
+#@endverbatim
+## @defgroup kbskit
+#@verbatim
 Package kbskit8.5 {
   Require {
     Use kbskit0.4 sdx.kit
-    Use tk8.5-static tk8.5 vfs1.4-static zlib1.2.3-static thread2.6.5 {*}[Get bi]
+    Use tk8.5-static tk8.5 vfs1.4-static zlib1.2.3-static thread2.6.7 {*}[Get bi]
     if {[lsearch -glob [Get kit] {vq*}] != -1} { Use vqtcl4.1-static }
     if {[lsearch -glob [Get kit] {mk*}] != -1} { Use mk4tcl2.4.9.7-static itcl3.4 }
   }
   Source {Link kbskit0.4}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
-  }
+  Configure {Config [Get srcdir-sys] --disable-shared}
   Make {
     if {$::tcl_platform(platform) == "windows"} {
       set MYCLI "[Get builddir-sys]/lib/libtcl85s.a"
@@ -2340,9 +2030,9 @@ Package kbskit8.5 {
         set MYMK "[Get builddir-sys]/lib/mk4tcl2.4.9.7-static/Mk4tcl.a -lstdc++"
       }
     }
-    if {[string equal [Get threads] {--enable-threads}]} {
-      set MYKITVQ "thread2.6.5"
-      set MYKITMK "thread2.6.5 itcl3.4"
+    if {[Get -threads] in {--enable-threads --enable-threads=yes {}}} {
+      set MYKITVQ "thread2.6.7"
+      set MYKITMK "thread2.6.7 itcl3.4"
     } else {
       set MYKITVQ ""
       set MYKITMK "itcl3.4"
@@ -2357,28 +2047,23 @@ Package kbskit8.5 {
     }
   }
   Install {foreach my [Get kit] {Run make install-$my}}
-  Test {;# start program and paste following commands:
-# catch {package req x}; foreach p [lsort [package names]] {puts "$p=[catch {package req $p}]"}
-  }
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/kbskit8.6
-# SOURCE
+#@endverbatim
+## @defgroup kbskit
+#@verbatim
 Package kbskit8.6 {
   Require {
     Use kbskit0.4 sdx.kit
     Use tk8.6-static tk8.6 vfs1.4-static zlib1.2.3-static {*}[Get bi]
-    if {[lsearch -glob [Get kit] {vq*}] != -1} {Use vqtcl4.1-static}
-    if {[lsearch -glob [Get kit] {mk*}] != -1} {Use mk4tcl2.4.9.7-static}
+    if {[lsearch -glob [Get kit] {vq*}] != -1} { Use vqtcl4.1-static }
+    if {[lsearch -glob [Get kit] {mk*}] != -1} { Use mk4tcl2.4.9.7-static}
   }
   Source {Link kbskit0.4}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
-  }
+  Configure {Config [Get srcdir-sys] --disable-shared}
   Make {
     if {$::tcl_platform(platform) == "windows"} {
-      set MYCLI "[Get builddir-sys]/lib/libtcl86ss.a"
+      set MYCLI "[Get builddir-sys]/lib/libtcl86s.a"
       append MYCLI " [Get builddir-sys]/lib/libz.a"
       append MYCLI " [Get builddir-sys]/lib/vfs1.4.1/vfs141.a"
       set MYGUI "[Get builddir-sys]/lib/libtk86s.a"
@@ -2396,12 +2081,12 @@ Package kbskit8.6 {
         set MYMK "[Get builddir-sys]/lib/mk4tcl2.4.9.7-static/Mk4tcl.a -lstdc++"
       }
     }
-    if {[string equal [Get threads] {--enable-threads}]} {
-      set MYKITVQ "thread2.6.6 tdbc1.0b16 itcl4.0b5"
-      set MYKITMK "thread2.6.6 tdbc1.0b16 itcl4.0b5"
+    if {[Get -threads] in {--enable-threads --enable-threads=yes {}}} {
+      set MYKITVQ "thread2.6.7 tdbc1.0b17 itcl4.0b7"
+      set MYKITMK "thread2.6.7 tdbc1.0b17 itcl4.0b7"
     } else {
-      set MYKITVQ "tdbc1.0b16 itcl4.0b5"
-      set MYKITMK "tdbc1.0b16 itcl4.0b5"
+      set MYKITVQ "tdbc1.0b17 itcl4.0b7"
+      set MYKITMK "tdbc1.0b17 itcl4.0b7"
     }
     if {$::tcl_platform(os) == "Linux"} {
       set MYXFT "-lXft"
@@ -2415,14 +2100,12 @@ Package kbskit8.6 {
   Install {foreach my [Get kit] {Run make install-$my}}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/memchan2.2.1
-# SOURCE
+#@endverbatim
+## @defgroup memchan
+#@verbatim
 Package memchan2.2.1 {
   Source {Cvs memchan.cvs.sourceforge.net:/cvsroot/memchan -D 2010-10-28 memchan}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get symbols] [Get 64bit] [Get threads]
-  }
+  Configure {Config [Get srcdir-sys]}
   Make {Run make binaries}
   Install {
     Run make install-binaries
@@ -2430,34 +2113,40 @@ Package memchan2.2.1 {
   }
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/mentry3.3
-# SOURCE
-Package mentry3.3 {
-  Require {Use wcb3.2}
-  Source {Http http://www.nemethi.de/mentry/mentry3.3.tar.gz}
+#@endverbatim
+## @defgroup mentry
+#@verbatim
+Package mentry3.5 {
+  Require {Use wcb3.4}
+  Source {Wget http://www.nemethi.de/mentry/mentry3.5.tar.gz}
   Configure {}
   Install {Tcl}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/mk4tcl2.4.9.7
-# SOURCE
+#@endverbatim
+## @defgroup mk4tcl
+#@verbatim
 Package mk4tcl2.4.9.7 {
-  Source {Svn svn://svn.equi4.com/metakit/trunk -r 4720}
+  Source {
+    Wget https://github.com/jcw/metakit/tarball/2.4.9.7
+    Tgz [Get builddir-sys]/../sources/2.4.9.7
+    file delete -force [Get builddir-sys]/../sources/2.4.9.7
+  }
 }
-#-------------------------------------------------------------------------------
-#***v* Package/mk4tcl2.4.9.7-static
-# SOURCE
+  #Source {Wget http://equi4.com/pub/mk/metakit-2.4.9.7.tar.gz}
+#@endverbatim
+## @defgroup mk4tcl
+# @bug Configure: CXXFLAGS wrong
+# @bug Configure: include SunOS cc with problems on wide int
+#@verbatim
 Package mk4tcl2.4.9.7-static {
   Source {Link mk4tcl2.4.9.7}
   Configure {
-    #TODO bug report
     Patch [Get srcdir]/unix/Makefile.in 46 {CXXFLAGS = $(CXX_FLAGS)} {CXXFLAGS = -DSTATIC_BUILD $(CXX_FLAGS)}
-    #TODO INCLUDE SunOS cc with problems on wide int
     if {$::tcl_platform(os) == "SunOS" && [Get CC] == "cc"} {
-      Patch [Get srcdir]/../sources/mk4tcl2.4.9.7/tcl/mk4tcl.h 9 "#include <tcl.h>\n\n" "#include <tcl.h>\n#undef TCL_WIDE_INT_TYPE\n"
+      Patch [Get srcdir]/tcl/mk4tcl.h 9 "#include <tcl.h>\n\n" "#include <tcl.h>\n#undef TCL_WIDE_INT_TYPE\n"
     }
-    Run env CC=[Get CC] [Get srcdir-sys]/unix/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/include [Get 64bit] [Get threads] [Get symbols]
+    Config [Get srcdir-sys]/unix --disable-shared --with-tcl=[Get builddir-sys]/include
+    Config [Get srcdir-sys]/unix --disable-shared --with-tcl=[Get builddir-sys]/include
   }
   Make {Run make tcl}
   Install {
@@ -2465,109 +2154,116 @@ Package mk4tcl2.4.9.7-static {
     Libdir Mk4tcl
   }
 }
-#-------------------------------------------------------------------------------
-#***v* Package/ral0.9.1
-# SOURCE
+#@endverbatim
+## @defgroup nap
+#@verbatim
+Package nap7.0.0 {
+  Source {Cvs tcl-nap.cvs.sourceforge.net:/cvsroot/tcl-nap -r nap-7-0-0 tcl-nap}
+  Configure {Config [Get srcdir-sys]/[Get sys]}
+  Make {Run make binaries}
+  Install {Run make install-binaries}
+  Clean {Run make clean}
+}
+#@endverbatim
+## @defgroup ral
+#@verbatim
 Package ral0.9.1 {
   Source {Cvs tclral.cvs.sourceforge.net:/cvsroot/tclral -r VERSION_0_9_1 .}
   Configure {
     if {[Get sys] eq {unix}} {
       file attributes [Get srcdir]/tclconfig/install-sh -permissions u+x
     }
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
+    Config [Get srcdir-sys]
   }
   Make {Run make CPPFLAGS=-I[Get srcdir-sys]/../tcl8.5/libtommath binaries}
   Install {Run make install-binaries}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/rbc0.1
-# SOURCE
+#@endverbatim
+## @defgroup rbc
+#@verbatim
 Package rbc0.1 {
-  Source {Svn https://rbctoolkit.svn.sourceforge.net/svnroot/rbctoolkit/trunk/rbc -r 48}
+  Source {Svn https://rbctoolkit.svn.sourceforge.net/svnroot/rbctoolkit/trunk/rbc -r 49}
   Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols] [Get aqua]
+    proc MY {f} {
+      set fd [open $f r];set c [read $fd];close $fd;
+      regsub -all tkpWinRopModes $c tkpWinRopMode1 c
+      set fd [open $f w];puts $fd $c;close $fd;
+    }
+    MY [Get srcdir]/generic/rbcGrLine.c
+    MY [Get srcdir]/generic/rbcTile.c
+    MY [Get srcdir]/generic/rbcWinDraw.c
+    rename MY {}
+    if {[Get sys] eq {unix}} {
+      file attributes [Get srcdir]/tclconfig/install-sh -permissions u+x
+    }
+    Config [Get srcdir-sys]
   }
   Make {Run make}
   Install {Run make install}
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/robodoc4.99.36
-# SOURCE
+#@endverbatim
+## @defgroup robodoc
+#@verbatim
 Package robodoc4.99.36 {
-  Source {Http http://www.xs4all.nl/~rfsber/Robo/DistSource/robodoc-4.99.36.tar.gz}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys]
-  }
+  Source {Wget http://www.xs4all.nl/~rfsber/Robo/DistSource/robodoc-4.99.36.tar.gz}
+  Configure {Config [Get srcdir-sys]}
   Make {Run make}
   Install {Run make install}
   Clean {Run make clean}
   Test {Run make check}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/sdx.kit
-# SOURCE
+#@endverbatim
+## @defgroup sdx
+#@verbatim
 Package sdx.kit {
-  Source {Http http://www.equi4.com/pub/sk/sdx.kit}
+  Source {Wget http://tclkit.googlecode.com/files/sdx-20110317.kit}
   Configure {}
-  Install {file copy -force [Get srcdir] [Get builddir]/bin}
+  Install {file copy -force [Get srcdir]/sdx-20110317.kit [Get builddir]/bin/sdx.kit}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/sdx0.0
-# SOURCE
-Package sdx0.0 {
-  Source {Svn svn://svn.equi4.com/sdx/trunk}
-  Configure {}
-  Make {Kit sdx}
-  Install {Kit sdx}
-  Clean {file delete -force sdx.vfs}
-  Test {Kit sdx}
-}
-#-------------------------------------------------------------------------------
-#***v* Package/snack2.2
-# SOURCE
+#@endverbatim
+## @defgroup snack
+#@verbatim
 Package snack2.2 {
-  Source {Http http://www.speech.kth.se/snack/dist/snack2.2.10.tar.gz}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] -libdir=[Get builddir-sys]/lib --includedir=[Get builddir-sys]/include --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib}
+  Source {Wget http://www.speech.kth.se/snack/dist/snack2.2.10.tar.gz}
+  Configure {Config [Get srcdir-sys]/[Get sys] -libdir=[Get builddir-sys]/lib --includedir=[Get builddir-sys]/include}
   Make {Run make}
   Install {Run make install}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/sqlite3.7.2
-# SOURCE
-Package sqlite3.7.2 {
-  Source {Http http://www.sqlite.org/sqlite-3_7_2-tea.tar.gz}
+#@endverbatim
+## @defgroup sqlite
+#@verbatim
+Package sqlite3.7.9 {
+  Source {Wget http://www.sqlite.org/sqlite-autoconf-3070900.tar.gz}
   Configure {
-    if {[Get sys] eq {unix}} {
-      file attributes [Get srcdir]/configure -permissions u+x
-      file attributes [Get srcdir]/tclconfig/install-sh -permissions u+x
-    }
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] [Get symbols] [Get threads] [Get 64bit]
+#    if {[Get sys] eq {unix}} {
+#      file attributes [Get srcdir]/configure -permissions u+x
+#      file attributes [Get srcdir]/tclconfig/install-sh -permissions u+x
+#    }
+    Config [Get srcdir-sys]/tea
   }
   Make {Run make}
   Install {Run make install-binaries}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tablelist5.2
-# SOURCE
-Package tablelist5.2 {
-  Source {Http http://www.nemethi.de/tablelist/tablelist5.2.tar.gz}
+#@endverbatim
+## @defgroup tablelist
+#@verbatim
+Package tablelist5.5 {
+  Source {Wget http://www.nemethi.de/tablelist/tablelist5.5.tar.gz}
   Configure {}
   Install {Tcl}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tcl8.5
-# SOURCE
+#@endverbatim
+## @defgroup tcl
+# @bug Source: IRIX mkstemp() bug at sourceforge.net/projects/tcl->Tracker->ID:878333
+#@verbatim
 Package tcl8.5 {
   Source {
-    Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -r core-8-5-9 tcl 
-    # because of IRIX mkstemp() bug -> fixed in 8.6
-    # sourceforge.net/projects/tcl -> Tracker -> ID: 878333
+    Wget http://prdownloads.sourceforge.net/tcl/tcl8.5.11-src.tar.gz
     if {$::tcl_platform(os) eq {IRIX64}} {
     Patch [Get srcdir]/[Get sys]/tclUnixPipe.c 48 {
 /*
@@ -2608,87 +2304,74 @@ Package tcl8.5 {
 }
     }
   }
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] [Get 64bit] [Get threads] [Get symbols]
-  }
+  Configure {Config [Get srcdir-sys]/[Get sys]}
   Make {Run make}
   Install {Run make install-binaries install-libraries install-private-headers}
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tcl8.5-static
-# SOURCE
+#@endverbatim
+## @defgroup tcl
+#@verbatim
 Package tcl8.5-static {
   Source {Link tcl8.5}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] [Get 64bit] [Get threads] [Get symbols]
-  }
+  Configure {Config [Get srcdir-sys]/[Get sys] --disable-shared}
   Make {Run make}
   Install {Run make install-binaries install-libraries install-private-headers}
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tcl8.6
-# SOURCE
-#  Source {Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -r core-8-6-b1 tcl}
+#@endverbatim
+## @defgroup tcl
+#@verbatim
 Package tcl8.6 {
-  Source {Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -D 2010-10-28 tcl}
+  Source {Wget http://prdownloads.sourceforge.net/tcl/tcl8.6b2-src.tar.gz}
   Configure {
-    Patch [Get srcdir]/win/Makefile.in 777 {	          $$i/configure --with-tcl=$(PWD)} {	          $$i/configure --with-tcl=$(LIB_INSTALL_DIR)}
-    Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] [Get 64bit] [Get threads] [Get symbols]
+    Patch [Get srcdir]/win/Makefile.in 782 {	          $$i/configure --with-tcl=$(PWD) } {	          $$i/configure --with-tcl=$(LIB_INSTALL_DIR) }
+    Config [Get srcdir-sys]/[Get sys]
+  }
+  Make {Run make}
+  Install {Run make install}
+  Clean {Run make clean}
+  Test {Run make test}
+}
+#@endverbatim
+## @defgroup tcl
+#@verbatim
+Package tcl8.6-static {
+  Source {Link tcl8.6}
+  Configure {
+    Patch [Get srcdir]/win/Makefile.in 782 {	          $$i/configure --with-tcl=$(PWD) } {	          $$i/configure --with-tcl=$(LIB_INSTALL_DIR) }
+    Config [Get srcdir-sys]/[Get sys] --disable-shared
   }
   Make {Run make}
   Install {
-    Run make install-binaries install-libraries install-private-headers install-packages
+    Run make install
     if {[Get sys] eq {win}} {
-      if {![file exists [Get builddir]/lib/libtclstub86s.a]} {
-        file copy [Get builddir]/lib/libtclstub86.a [Get builddir]/lib/libtclstub86s.a
-      }
-      if {[file exists [Get builddir]/lib/libtcl86ss.a]} {
-        file copy -force [Get builddir]/lib/libtcl86ss.a [Get builddir]/lib/libtcl86s.a
-      }
+      file copy -force [Get builddir]/tcl8.6-static/libtclstub86.a [Get builddir]/lib/libtclstub86s.a
+      file copy -force [Get builddir]/tcl8.6-static/libtcl86.a [Get builddir]/lib/libtcl86s.a
     }
   }
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tcl8.6-static
-# SOURCE
-Package tcl8.6-static {
-  Source {Link tcl8.6}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] [Get 64bit] [Get threads] [Get symbols]
-  }
-  Make {Run make}
-  Install {Run make install-binaries install-libraries install-private-headers}
-  Clean {Run make clean}
-  Test {Run make test}
-}
-#-------------------------------------------------------------------------------
-#***v* Package/tcllib1.12
-# SOURCE
-Package tcllib1.12 {
-  Source {Cvs tcllib.cvs.sourceforge.net:/cvsroot/tcllib -r tcllib-1-12 tcllib}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys]
-  }
+#@endverbatim
+## @defgroup tcllib
+#@verbatim
+Package tcllib1.14 {
+  Source {Wget http://prdownloads.sourceforge.net/tcllib/tcllib-1.14.tar.gz}
+  Configure {Config [Get srcdir-sys]}
   Make {}
   Install {Run make install-libraries}
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tcloo0.6
-# SOURCE
+#@endverbatim
+## @defgroup tcloo
+#@verbatim
 Package tcloo0.6 {
   Source {Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -r release-0-6 oocore}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
-#    file copy -force [file join [Get srcdir] TclOO.rc] [Get makedir]
-  }
+  Configure {Config [Get srcdir-sys]}
   Make {Run make}
   Install {
     Run make install install-private-headers
@@ -2697,155 +2380,136 @@ Package tcloo0.6 {
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tclx8.4
-# SOURCE
+#@endverbatim
+## @defgroup tclx
+#@verbatim
 Package tclx8.4 {
   Source {Cvs tclx.cvs.sourceforge.net:/cvsroot/tclx -D 2010-10-28 tclx}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
-  }
+  Configure {Config [Get srcdir-sys]}
   Make {Run make binaries}
   Install {Run make install-binaries}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tdom0.8.2
-# SOURCE
-Package tdom0.8.2 {
-  Source {Http http://www.tdom.org/files/tDOM-0.8.2.tgz}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
-  }
+#@endverbatim
+## @defgroup tdom
+#@verbatim
+Package tdom0.8.3 {
+  Source {Wget https://github.com/downloads/tDOM/tdom/tDOM-0.8.3.tgz}
+  Configure {Config [Get srcdir-sys]}
   Make {Run make binaries}
   Install {Run make install-binaries}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/thread2.6.5
-# SOURCE
-Package thread2.6.5 {
-  Source {Cvs tcl.cvs.sourceforge.net:/cvsroot/tcl -D 2010-10-28 thread}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get symbols]
-  }
+#@endverbatim
+## @defgroup thread
+#@verbatim
+Package thread2.6.7 {
+  Source {Wget http://prdownloads.sourceforge.net/tcl/thread2.6.7.tar.gz}
+  Configure {Config [Get srcdir-sys]}
   Make {Run make}
   Install {Run make install-binaries}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/thread2.6.5-static
-# SOURCE
-Package thread2.6.5-static {
-  Source {Link thread2.6.5}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get symbols]
-  }
+#@endverbatim
+## @defgroup thread
+#@verbatim
+Package thread2.6.7-static {
+  Source {Link thread2.6.7}
+  Configure {Config [Get srcdir-sys] --disable-shared}
   Make {Run make}
   Install {Run make install-binaries}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tk8.5
-# SOURCE
+#@endverbatim
+## @defgroup tk
+#@verbatim
 Package tk8.5 {
   Require {Use tcl8.5}
-  Source {Cvs tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -r core-8-5-9 tk}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols] [Get aqua]
-  }
+  Source {Wget http://prdownloads.sourceforge.net/tcl/tk8.5.11-src.tar.gz}
+  Configure {Config [Get srcdir-sys]/[Get sys]}
   Make {Run make}
-  Install {Run make install-binaries install-libraries install-private-headers}
+  Install {Run make install install-private-headers}
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tk8.5-static
-# SOURCE
+#@endverbatim
+## @defgroup tk
+#@verbatim
 Package tk8.5-static {
   Require {Use tcl8.5-static}
   Source {Link tk8.5}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols] [Get aqua]
-  }
+  Configure {Config [Get srcdir-sys]/[Get sys] --disable-shared}
   Make {Run make}
-  Install {Run make install-binaries install-libraries install-private-headers}
+  Install {Run make install install-private-headers}
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tk8.6
-# SOURCE
-#  Source {Cvs tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -r core-8-6-b1 tk}
+#@endverbatim
+## @defgroup tk
+#@verbatim
 Package tk8.6 {
   Require {Use tcl8.6}
-  Source {Cvs tktoolkit.cvs.sourceforge.net:/cvsroot/tktoolkit -D 2010-10-28 tk}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols] [Get aqua]
-  }
+  Source {Wget http://prdownloads.sourceforge.net/tcl/tk8.6b2-src.tar.gz}
+  Configure {Config [Get srcdir-sys]/[Get sys]}
   Make {Run make}
-  Install {Run make install-binaries install-libraries install-private-headers}
+  Install {Run make install}
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tk8.6-static
-# SOURCE
+#@endverbatim
+## @defgroup tk
+#@verbatim
 Package tk8.6-static {
   Require {Use tcl8.6 tcl8.6-static}
   Source {Link tk8.6}
-  Configure {
-    if {[Get sys] eq {win1}} {;#TEST
-      Patch [Get srcdir]/[Get sys]/Makefile.in 601 {	$(CC) $(CFLAGS) $(WISH_OBJS) $(TCL_LIB_FILE) $(TK_LIB_FILE) $(LIBS) } {	$(CC) $(CFLAGS) $(WISH_OBJS) $(TCL_LIB_FILE) $(TK_LIB_FILE) $(TCL_STUB_LIB_FILE) $(LIBS) }
-    }
-    Run env CC=[Get CC] [Get srcdir-sys]/[Get sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols] [Get aqua]
-  }
+  Configure {Config [Get srcdir-sys]/[Get sys] --disable-shared}
   Make {Run make}
-  Install {Run make install-binaries install-libraries install-private-headers}
+  Install {Run make install
+    if {[Get sys] eq {win}} {
+      file copy -force [Get builddir]/tk8.6-static/libtkstub86.a [Get builddir]/lib/libtkstub86s.a
+      file copy -force [Get builddir]/tk8.6-static/libtk86.a [Get builddir]/lib/libtk86s.a
+    }
+  }
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tkcon
-# SOURCE
+#@endverbatim
+## @defgroup tkcon
+#@verbatim
 Package tkcon {
   Source {Cvs tkcon.cvs.sourceforge.net:/cvsroot/tkcon -D 2010-10-28 tkcon}
   Configure {}
   Install {Tcl}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tklib0.5
-# SOURCE
+#@endverbatim
+## @defgroup tklib
+#@verbatim
 Package tklib0.5 {
   Source {Cvs tcllib.cvs.sourceforge.net:/cvsroot/tcllib -r tklib-0-5 tklib}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys]
-  }
+  Configure {Config [Get srcdir-sys]}
   Make {}
   Install {Run make install-libraries}
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tksqlite0.5.8
-# SOURCE
+#@endverbatim
+## @defgroup tksqlite
+#@verbatim
 Package tksqlite0.5.8 {
-  Require {Use kbskit8.5 sdx.kit tktable2.10 treectrl2.2.9 sqlite3.7.2}
-  Source {Http http://reddog.s35.xrea.com/software/tksqlite-0.5.8.tar.gz}
+  Require {Use kbskit8.5 sdx.kit tktable2.10 treectrl2.4.1 sqlite3.7.9}
+  Source {Wget http://reddog.s35.xrea.com/software/tksqlite-0.5.8.tar.gz}
   Configure {Kit {source $::starkit::topdir/tksqlite.tcl} Tk}
-  Make {Kit tksqlite sqlite3.7.2 tktable2.10 treectrl2.2.9}
+  Make {Kit tksqlite sqlite3.7.9 tktable2.10 treectrl2.4.1}
   Install {Kit tksqlite -vq-gui}
   Clean {file delete -force tksqlite.vfs}
   Test {Kit tksqlite}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tktable2.10
-# SOURCE
+#@endverbatim
+## @defgroup tktable
+#@verbatim
 Package tktable2.10 {
   Source {Cvs tktable.cvs.sourceforge.net:/cvsroot/tktable -r tktable-2-10-0 tktable}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
-  }
+  Configure {Config [Get srcdir-sys]}
   Make {Run make binaries}
   Install {
     Run make install-binaries
@@ -2853,57 +2517,51 @@ Package tktable2.10 {
   }
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/tls1.6
-# SOURCE
-Package tls1.6 {
-  Source {Cvs tls.cvs.sourceforge.net:/cvsroot/tls -r tls-1-6-0 tls}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
-  }
+#@endverbatim
+## @defgroup tls
+#@verbatim
+Package tls1.6.1 {
+  Source {Cvs tls.cvs.sourceforge.net:/cvsroot/tls -r tls-1-6-1 tls}
+  Configure {Config [Get srcdir-sys]}
   Make {Run make}
   Install {Run make install}
   Clean {Run make clean}
   Test {Run make test}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/treectrl2.2.9
-# SOURCE
-Package treectrl2.2.9 {
-  Source {Cvs tktreectrl.cvs.sourceforge.net:/cvsroot/tktreectrl -r VERSION2_2_9 tktreectrl}
+#@endverbatim
+## @defgroup treectrl
+# @todo Error in configure: tk header default.h not found
+#@verbatim
+Package treectrl2.4.1 {
+  Source {Wget http://prdownloads.sourceforge.net/sourceforge/tktreectrl/tktreectrl-2.4.1.tar.gz}
   Configure {
-    if {[Get sys] eq {unix}} {
-      file attributes [Get srcdir]/configure -permissions u+x
-      file attributes [Get srcdir]/tclconfig/install-sh -permissions u+x
-    }
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
+    Config [Get srcdir-sys] --with-tkinclude=[Get TK_SRC_DIR]/generic
+#    Patch [Get srcdir]/generic/tkTreeCtrl.c 4217 {	SRCCOPY | CAPTUREBLT);} {	SRCCOPY);}
   }
   Make {Run make}
   Install {Run make install-binaries install-libraries}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/trofs0.4.4
-# SOURCE
+#@endverbatim
+## @defgroup trofs
+#@verbatim
 Package trofs0.4.4 {
-  Source {Http http://math.nist.gov/~DPorter/tcltk/trofs/trofs0.4.4.tar.gz}
-  Configure {
-    Run env CC=[Get CC] TCLSH_PROG=[Get builddir-sys]/bin/tclsh85.exe [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
-  }
+  Source {Wget http://math.nist.gov/~DPorter/tcltk/trofs/trofs0.4.4.tar.gz}
+  Configure {Config [Get srcdir-sys]}
   Make {Run make binaries}
   Install {Run make install-binaries}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/udp1.0.8
-# SOURCE
+#@endverbatim
+## @defgroup udp
+#@verbatim
 Package udp1.0.8 {
   Source {Cvs tcludp.cvs.sourceforge.net:/cvsroot/tcludp -r tcludp-1_0_8 tcludp}
   Configure {
     if {[Get sys] eq {unix}} {
       file attributes [Get srcdir]/tclconfig/install-sh -permissions u+x
     }
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
+    Config [Get srcdir-sys]
   }
   Make {
     # because of IRIX64
@@ -2913,45 +2571,41 @@ Package udp1.0.8 {
   Install {Run make install-binaries}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/vfs1.4
-# SOURCE
+#@endverbatim
+## @defgroup vfs
+#@verbatim
 Package vfs1.4 {
-  Source {Cvs tclvfs.cvs.sourceforge.net:/cvsroot/tclvfs -D 2010-10-28 tclvfs}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
-  }
+  Source {Cvs tclvfs.cvs.sourceforge.net:/cvsroot/tclvfs -D 2012-01-10 tclvfs}
+  Configure {Config [Get srcdir-sys] --with-tclinclude=[Get builddir-sys]/include}
   Make {Run make}
   Install {Run make install-binaries}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/vfs1.4-static
-# SOURCE
+#@endverbatim
+## @defgroup vfs
+#@verbatim
 Package vfs1.4-static {
   Source {Link vfs1.4}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
-  }
+  Configure {Config [Get srcdir-sys] --disable-shared --with-tclinclude=[Get builddir-sys]/include}
   Make {Run make}
   Install {Run make install-binaries}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/vqtcl4.1
-# SOURCE
+#@endverbatim
+## @defgroup vqtcl
+#@verbatim
 Package vqtcl4.1 {
-  Source {Svn svn://svn.equi4.com/vlerq/branches/v4/tcl -r 4720}
+  Source {Svn http://tclkit.googlecode.com/svn/trunk/vqtcl -r21}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/vqtcl4.1-static
-# SOURCE
+#@endverbatim
+## @defgroup vqtcl
+# @bug Configure: big endian problem
+#@verbatim
 Package vqtcl4.1-static {
   Source {Link vqtcl4.1}
   Configure {
-#TODO bug report
     Patch [Get srcdir]/generic/vlerq.c 42 {#if !defined(_BIG_ENDIAN) && defined(WORDS_BIGENDIAN)} {#if defined(WORDS_BIGENDIAN)}
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --disable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib [Get 64bit] [Get threads] [Get symbols]
+    Config [Get srcdir-sys] --disable-shared
   }
   Make {
     set MYFLAGS "-D__[exec uname -p]__"
@@ -2960,72 +2614,93 @@ Package vqtcl4.1-static {
   Install {Run make install-binaries}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/wcb3.2
-# SOURCE
-Package wcb3.2 {
-  Source {Http http://www.nemethi.de/wcb/wcb3.2.tar.gz}
+#@endverbatim
+## @defgroup wcb
+#@verbatim
+Package wcb3.4 {
+  Source {Wget http://www.nemethi.de/wcb/wcb3.4.tar.gz}
   Configure {}
   Install {Tcl}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/wikit.tkd
-# SOURCE
+#@endverbatim
+## @defgroup wikit
+#@verbatim
 Package wikit.tkd {
-  Source {;#TODO how to get files from sourceforge?
-    Http http://garr.dl.sourceforge.net/sourceforge/tclerswikidata/wikit-20090210.tkd
-  }
+  Source {Wget http://prdownloads.sourceforge.net/sourceforge/tclerswikidata/wikit-20090210.tkd}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/wubwikit.kit
-# SOURCE
+#@endverbatim
+## @defgroup wubwikit
+#@verbatim
 Package wubwikit.kit {
-  Source {Http http://wubwikit.googlecode.com/files/wubwikit20090218.kit}
+  Source {Wget http://wubwikit.googlecode.com/files/wubwikit20090218.kit}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/xotcl1.6.5
-# SOURCE
-Package xotcl1.6.5 {
-  Source {Http http://media.wu-wien.ac.at/download/xotcl-1.6.5.tar.gz}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
-  }
+#@endverbatim
+## @defgroup xotcl
+#@verbatim
+Package xotcl1.6.7 {
+  Source {Wget http://media.wu-wien.ac.at/download/xotcl-1.6.7.tar.gz}
+  Configure {Config [Get srcdir-sys]}
   Make {Run make binaries libraries}
-  Install {
-#TODO    file mkdir [file join [Get builddir] lib xotcl1.6.5 apps]
-    Run make install-binaries install-libraries
-  }
+  Install {Run make install-binaries install-libraries}
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/xotcl1.6.6
-# SOURCE
-Package xotcl1.6.6 {
-  Source {Http http://media.wu-wien.ac.at/download/xotcl-1.6.6.tar.gz}
-  Configure {
-    Run env CC=[Get CC] [Get srcdir-sys]/configure --enable-shared --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys] --with-tcl=[Get builddir-sys]/lib --with-tk=[Get builddir-sys]/lib [Get symbols] [Get threads] [Get 64bit]
-  }
-  Make {Run make binaries libraries}
-  Install {
-#TODO    file mkdir [file join [Get builddir] lib xotcl1.6.6 apps]
-    Run make install-binaries install-libraries
-  }
-  Clean {Run make clean}
+#@endverbatim
+## @defgroup z
+#@verbatim
+Package z0.1 {
+  Source {Cvs kbskit.cvs.sourceforge.net:/cvsroot/z -r z_0_1 z}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/zlib1.2.3
-# SOURCE
+#@endverbatim
+## @defgroup z
+#@verbatim
+Package z_c0.1 {
+  Require {Use z0.1}
+  Source {Link z0.1/generic}
+  Configure {Config [Get srcdir-sys]}
+  Make {Run make}
+  Install {Run make install-binaries install-libraries}
+  Clean {Run make clean}
+  Test {Run make test}
+}
+#@endverbatim
+## @defgroup z
+#@verbatim
+Package z_tcl0.1 {
+  Require {Use z0.1}
+  Source {Link z0.1/library}
+  Configure {}
+  Install {Tcl z_tcl0.1}
+  Test {Run tclsh [Get srcdir-sys]/../tests/all.tcl}
+}
+#@endverbatim
+## @defgroup z
+#@verbatim
+Package z_gse0.1 {
+  Require {
+    Use z_c0.1 z_tcl0.1
+    Use tklib0.5 sqlite3.7.9 tktable2.10 img1.4 itcl3.4 rbc0.1 tablelist5.5
+  }
+  Source { Link z_gse }
+  Configure {Kit {::gse {*}$argv} gse}
+  Make { Kit z_gse tklib0.5/autoscroll tklib0.5/tooltip tklib0.5/style z_c0.1 z_tcl0.1 sqlite3.7.9 tktable2.10 img1.4 itcl3.4 rbc0.1 tablelist5.5}
+  Install {Kit z_gse -vq-gui}
+  Clean {Kit z_gse}
+}
+#@endverbatim
+## @defgroup zlib
+#@verbatim
 Package zlib1.2.3 {
-  Source {Http http://www.equi4.com/pub/tk/tars/zlib.tar.gz}
+  Source {Wget http://www.equi4.com/pub/tk/tars/zlib.tar.gz}
 }
-#-------------------------------------------------------------------------------
-#***v* Package/zlib1.2.3-static
-# SOURCE
+#@endverbatim
+## @defgroup zlib
+#@verbatim
 Package zlib1.2.3-static {
   Source {Link zlib1.2.3}
   Configure {
     eval file copy [glob [Get srcdir]/*] .
     set MYFLAGS "[Get TCL_EXTRA_CFLAGS] [Get TCL_CFLAGS_OPTIMIZE]"
+#TODO
     Run env CC=[Get CC] CFLAGS=$MYFLAGS ./configure --prefix=[Get builddir-sys] --exec-prefix=[Get builddir-sys]
   }
   Make {Run make}
@@ -3035,8 +2710,36 @@ Package zlib1.2.3-static {
   }
   Clean {Run make clean}
 }
-#-------------------------------------------------------------------------------
-};# end of DB
+#@endverbatim
+## @defgroup tango
+#@verbatim
+Package tango0.8.90 {
+  Source {
+    #Cvs :pserver:anoncvs@anoncvs.freedesktop.org:/cvs/tango tango-icon-theme
+    Wget http://tango.freedesktop.org/releases/tango-icon-theme-0.8.90.tar.gz
+  }
+}
+#@endverbatim
+## @defgroup silkicons
+#@verbatim
+Package silkicons1.3 {
+  Source {Wget http://www.famfamfam.com/lab/icons/silk/famfamfam_silk_icons_v013.zip}
+}
+#@endverbatim
+## @defgroup wikit
+#@verbatim
+Package wikit {
+  Source {Svn http://wikitcl.googlecode.com/svn/trunk -r 1548}
+}
+#@endverbatim
+## @defgroup wub
+#@verbatim
+Package wub {
+  Source {Svn http://wub.googlecode.com/svn/trunk -r 3476}
+}
+#@endverbatim
+## @}
+}
 
 #===============================================================================
 

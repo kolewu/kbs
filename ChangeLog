@@ -1,4 +1,27 @@
-2010-??-??  Rene Zaumseil <r.zaumseil@freenet.de>
+2012-01-16  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.4.2
+	* kbs.tcl:
+	- use doxygen mode for documentation
+	- new 'Config' command inside 'Configure' parts
+	- use of 'wget'
+	changed:
+	- tcl/tk 8.5.11
+	- tcl/tk 8.6b2
+	- bwidget 1.9.5
+	- gridplus 2.6
+	- img 1.4 (svn #332)
+	- sqlite 3.7.9
+	- tablelist 5.5
+	- mentry 3.5
+	- wcb 3.4
+	- tcllib 1.14
+	- tdom 0.8.3
+	- thread 2.6.7
+	- treectrl 2.4.1
+	- xotcl 1.6.7
+	- version from date (2012-01-10)
+	  - vfs 1.4
+2010-11-19  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.4.1
 	* kbs.tcl:
 	changed:
