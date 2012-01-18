@@ -169,6 +169,7 @@ options (configuration variables are available with \[Get ..\]):
   -mk-dyn           add 'mk-dyn' to variable 'kit'
   -mk-gui           add 'mk-gui' to variable 'kit'
   -mk-bi            add 'mk-bi' to variable 'kit'
+  -staticstdcpp     build with static libstdc++
   Vqtcl based 'tclkit lite' interpreter build options:
   -vq               add 'vq-cli|dyn|gui' to variable 'kit'
   -vq-cli           add 'vq-cli' to variable 'kit'
@@ -535,6 +536,7 @@ namespace eval ::kbs::config {
   set _(kitgui)         {}
   set _(kit)		[list];# list of interpreter builds
   set _(bi)		[list];# list of packages for batteries included interpreter builds
+  set _(staticstdcpp)	0;# build with static libstdc++
   set _(makedir)	{};# package specific build dir
   set _(makedir-sys)	{};# package and system specific build dir
   set _(srcdir)		{};# package specific source dir
@@ -838,10 +840,10 @@ if {[catch {Run cvs -d $myPath -z3 co -P -d $package {*}$args} myMsg]} {
           Run $_(exec-wget) $args
           # unpack if necessary
           switch -glob $myFile {
-            *.tgz - *.tar.gz {
+            *.tgz - *.tar.gz - *.tgz?uuid=* - *.tar.gz?uuid=* {
               Source- Tgz $myFile
               file delete $myFile
-            } *.zip {
+            } *.zip - *.zip?uuid=* {
               Source- Zip $myFile
               file delete $myFile
             } *.kit {
@@ -1142,7 +1144,7 @@ proc ::kbs::config::Install-Kit {name args} {
   foreach myExe [glob $myTmp/kbs*-cli* $myTmp/kbs*-dyn* $myTmp/kbs*-gui*] {
     if {$myExe ne $myRun} break
   }
-  if {$myExe eq {}} { return -code error "no intepreter in '$myTmp'" }
+  if {$myExe eq {}} { return -code error "no interpreter in '$myTmp'" }
   if {$myRun eq {}} {
     Run $myExe [file join [Get builddir] bin sdx.kit] wrap $name
     file rename -force $name [file join [Get builddir] bin $name.kit]
@@ -1465,6 +1467,8 @@ proc ::kbs::config::_configure {args} {
         lappend _(kit) mk-gui
       } -mk-bi {
         lappend _(kit) mk-bi
+      } -staticstdcpp {
+        set _(staticstdcpp) 1
       } -vq {
         lappend _(kit) vq-cli vq-dyn vq-gui
       } -vq-cli {
@@ -2011,24 +2015,28 @@ Package kbskit8.5 {
   Source {Link kbskit0.4}
   Configure {Config [Get srcdir-sys] --disable-shared}
   Make {
+    set MYMK "[Get builddir-sys]/lib/mk4tcl2.4.9.7-static/Mk4tcl.a "
+    if {$::tcl_platform(platform) == "Darwin"} {
+      append MYMK "-static-libgcc -lstdc++ -framework CoreFoundation"
+    } elseif {$::tcl_platform(os) == "SunOS" && [Get CC] == "cc"} {
+      append MYMK "-lCstd -lCrun"
+    } elseif {[Get staticstdcpp]} {
+      append MYMK "-Wl,-Bstatic -lstdc++ -Wl,-Bdynamic -lm"
+    }  else  {
+      append MYMK "-lstdc++"
+    }
     if {$::tcl_platform(platform) == "windows"} {
       set MYCLI "[Get builddir-sys]/lib/libtcl85s.a"
       append MYCLI " [Get builddir-sys]/lib/libz.a"
       append MYCLI " [Get builddir-sys]/lib/vfs1.4.1/vfs141.a"
       set MYGUI "[Get builddir-sys]/lib/libtk85s.a"
       set MYVQ "[Get builddir-sys]/lib/vqtcl4.1/vqtcl41.a"
-      set MYMK "[Get builddir-sys]/lib/mk4tcl2.4.9.7-static/Mk4tcl.a -lstdc++"
     } else {
       set MYCLI "[Get builddir-sys]/lib/libtcl8.5.a"
       append MYCLI " [Get builddir-sys]/lib/libz.a"
       append MYCLI " [Get builddir-sys]/lib/vfs1.4.1/libvfs1.4.1.a"
       set MYGUI "[Get builddir-sys]/lib/libtk8.5.a"
       set MYVQ "[Get builddir-sys]/lib/vqtcl4.1/libvqtcl4.1.a"
-      if {$::tcl_platform(os) == "SunOS" && [Get CC] == "cc"} {
-        set MYMK "[Get builddir-sys]/lib/mk4tcl2.4.9.7-static/Mk4tcl.a -lCstd -lCrun"
-      } else {
-        set MYMK "[Get builddir-sys]/lib/mk4tcl2.4.9.7-static/Mk4tcl.a -lstdc++"
-      }
     }
     if {[Get -threads] in {--enable-threads --enable-threads=yes {}}} {
       set MYKITVQ "thread2.6.7"
@@ -2062,24 +2070,30 @@ Package kbskit8.6 {
   Source {Link kbskit0.4}
   Configure {Config [Get srcdir-sys] --disable-shared}
   Make {
+    set MYMK "[Get builddir-sys]/lib/mk4tcl2.4.9.7-static/Mk4tcl.a "
+    if {$::tcl_platform(platform) == "windows"} {
+      set MYMK "[Get builddir-sys]/lib/libtclstub86s.a -lstdc++"
+    } elseif {$::tcl_platform(platform) == "Darwin"} {
+      append MYMK "-static-libgcc -lstdc++ -framework CoreFoundation"
+    } elseif {$::tcl_platform(os) == "SunOS" && [Get CC] == "cc"} {
+      append MYMK "-lCstd -lCrun"
+    } elseif {[Get staticstdcpp]} {
+      append MYMK "-Wl,-Bstatic -lstdc++ -Wl,-Bdynamic -lm"
+    }  else  {
+      append MYMK "-lstdc++"
+    }
     if {$::tcl_platform(platform) == "windows"} {
       set MYCLI "[Get builddir-sys]/lib/libtcl86s.a"
       append MYCLI " [Get builddir-sys]/lib/libz.a"
       append MYCLI " [Get builddir-sys]/lib/vfs1.4.1/vfs141.a"
       set MYGUI "[Get builddir-sys]/lib/libtk86s.a"
       set MYVQ "[Get builddir-sys]/lib/vqtcl4.1/vqtcl41.a [Get builddir-sys]/lib/libtclstub86s.a"
-      set MYMK "[Get builddir-sys]/lib/mk4tcl2.4.9.7-static/Mk4tcl.a [Get builddir-sys]/lib/libtclstub86s.a -lstdc++"
     } else {
       set MYCLI "[Get builddir-sys]/lib/libtcl8.6.a"
       append MYCLI " [Get builddir-sys]/lib/libz.a"
       append MYCLI " [Get builddir-sys]/lib/vfs1.4.1/libvfs1.4.1.a"
       set MYGUI "[Get builddir-sys]/lib/libtk8.6.a"
       set MYVQ "[Get builddir-sys]/lib/vqtcl4.1/libvqtcl4.1.a [Get builddir-sys]/lib/libtclstub8.6.a"
-      if {$::tcl_platform(os) == "SunOS" && [Get CC] == "cc"} {
-        set MYMK "[Get builddir-sys]/lib/mk4tcl2.4.9.7-static/Mk4tcl.a -lCstd -lCrun"
-      } else {
-        set MYMK "[Get builddir-sys]/lib/mk4tcl2.4.9.7-static/Mk4tcl.a -lstdc++"
-      }
     }
     if {[Get -threads] in {--enable-threads --enable-threads=yes {}}} {
       set MYKITVQ "thread2.6.7 tdbc1.0b17 itcl4.0b7"
@@ -2629,12 +2643,6 @@ Package wikit.tkd {
   Source {Wget http://prdownloads.sourceforge.net/sourceforge/tclerswikidata/wikit-20090210.tkd}
 }
 #@endverbatim
-## @defgroup wubwikit
-#@verbatim
-Package wubwikit.kit {
-  Source {Wget http://wubwikit.googlecode.com/files/wubwikit20090218.kit}
-}
-#@endverbatim
 ## @defgroup xotcl
 #@verbatim
 Package xotcl1.6.7 {
@@ -2728,14 +2736,60 @@ Package silkicons1.3 {
 #@endverbatim
 ## @defgroup wikit
 #@verbatim
-Package wikit {
-  Source {Svn http://wikitcl.googlecode.com/svn/trunk -r 1548}
+Package wikidb {
+  Source {Wget http://prdownloads.sourceforge.net/tclerswikidata/wikit-20110307.tkd.zip}
+  Configure {}
 }
 #@endverbatim
-## @defgroup wub
+## @defgroup wikit
+#@verbatim
+Package wikitcl {
+  Source {Svn http://wikitcl.googlecode.com/svn/trunk -r 1637}
+  Configure {}
+}
+#@endverbatim
+## @defgroup wikit
 #@verbatim
 Package wub {
-  Source {Svn http://wub.googlecode.com/svn/trunk -r 3476}
+  Source {Svn http://wub.googlecode.com/svn/trunk -3732}
+  Configure {}
+}
+#@endverbatim
+## @defgroup wikit
+#@verbatim
+Package tdbc {
+  Source {Wget http://core.tcl.tk/tdbc/tarball/TDBC-9972d7cf7d10b551.tar.gz?uuid=9972d7cf7d10b55157773ba027e54713d53e4cee}
+  Configure {}
+}
+#@endverbatim
+## @defgroup wikit
+#@verbatim
+Package wubwikit {
+  Require {Use kbskit8.6 wub wikitcl tdbc tcllib1.14 sqlite3.7.9}
+  Source {Svn http://wubwikit.googlecode.com/svn/trunk -r 112}
+  Configure {
+    Run cp [Get srcdir]/wubwikit_main.tcl main.tcl
+  }
+  Make {
+    Kit wubwikit tcllib1.14 sqlite3.7.9
+    Run cp [Get srcdir]/local.tcl wubwikit.vfs/deflocal.tcl
+    Run mkdir wubwikit.vfs/lib/tdbcsqlite
+    Run cp [Get srcdir]/../tdbc/tdbcsqlite3/library/tdbcsqlite3.tcl wubwikit.vfs/lib/tdbcsqlite
+    set MY [open wubwikit.vfs/lib/tdbcsqlite/pkgIndex.tcl w]
+    puts $MY {package ifneeded tdbc::sqlite3 1.0b17 [list source [file join $dir tdbcsqlite3.tcl]]}
+    close $MY
+    Run cp -r [Get srcdir]/../wikitcl wubwikit.vfs/lib
+    Run cp -r [Get srcdir]/../wub wubwikit.vfs/lib
+    Run cp [Get srcdir]/local.tcl wubwikit.vfs/lib/wikitcl/wubwikit/local.tcl
+    Run cp [Get srcdir]/local.tcl wubwikit.vfs/deflocal.tcl
+    Run cp [Get srcdir]/vars.tcl wubwikit.vfs/lib/wikitcl/wubwikit/vars.tcl
+    Run cp [Get srcdir]/wikit.ini wubwikit.vfs/lib/wikitcl/wubwikit/wikit.ini
+    Run cp [Get srcdir]/welcome.html wubwikit.vfs/lib/wikitcl/wubwikit/docroot/html
+    Run cp [Get srcdir]/wikitoc.jpg wubwikit.vfs/lib/wikitcl/wubwikit/docroot/images
+    Run cp [Get srcdir]/wikit.config.templ wubwikit.vfs/lib/wikitcl/wubwikit
+    Run find wubwikit.vfs -name ".svn" | xargs rm -Rf
+  }
+  Install {Kit wubwikit -vq-cli}
 }
 #@endverbatim
 ## @}
