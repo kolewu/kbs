@@ -837,7 +837,7 @@ if {[catch {Run cvs -d $myPath -z3 co -P -d $package {*}$args} myMsg]} {
         set myFile [file normalize ./[file tail $args]]
         puts "=== Source $type $package"
         if {[catch {
-          Run $_(exec-wget) $args
+          Run $_(exec-wget) --no-check-certificate $args
           # unpack if necessary
           switch -glob $myFile {
             *.tgz - *.tar.gz - *.tgz?uuid=* - *.tar.gz?uuid=* {
