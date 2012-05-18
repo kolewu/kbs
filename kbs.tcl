@@ -2179,6 +2179,16 @@ Package nap7.0.0 {
   Clean {Run make clean}
 }
 #@endverbatim
+## @defgroup nsf
+#@verbatim
+Package nsf2.0 {
+  Source {Wget http://prdownloads.sourceforge.net/next-scripting/nsf2.0b3.tar.gz}
+  Configure {Config [Get srcdir-sys]}
+  Make {Run make}
+  Install {Run make install}
+  Clean {Run make clean}
+}
+#@endverbatim
 ## @defgroup ral
 #@verbatim
 Package ral0.9.1 {
@@ -2512,7 +2522,12 @@ Package tklib0.5 {
 Package tksqlite0.5.8 {
   Require {Use kbskit8.5 sdx.kit tktable2.10 treectrl2.4.1 sqlite3.7.9}
   Source {Wget http://reddog.s35.xrea.com/software/tksqlite-0.5.8.tar.gz}
-  Configure {Kit {source $::starkit::topdir/tksqlite.tcl} Tk}
+  Configure {
+    Patch [Get srcdir]/tksqlite.tcl 14708\
+{		Cmd::openDB [file normalize [file join $_startdir $_file]]}\
+{		Cmd::openDB [file normalize [file join $::starkit::topdir .. $_file]]}
+    Kit {source $::starkit::topdir/tksqlite.tcl} Tk
+  }
   Make {Kit tksqlite sqlite3.7.9 tktable2.10 treectrl2.4.1}
   Install {Kit tksqlite -vq-gui}
   Clean {file delete -force tksqlite.vfs}
