@@ -55,7 +55,11 @@ if test ! -r ./kbs.tcl ; then \
   echo "Please start from directory containing the file 'kbs.tcl'"; exit 1 ;\
 fi;
 # bootstrap for building wish.. \
+if test "`pwd`" = "/" ; then \
+PREFIX=/`uname` ;\
+else \
 PREFIX=`pwd`/`uname` ;\
+fi ;\
 case `uname` in \
   MINGW*) DIR="win"; EXE="${PREFIX}/bin/tclsh85s.exe" ;; \
   *) DIR="unix"; EXE="${PREFIX}/bin/tclsh8.5" ;; \
@@ -2159,7 +2163,6 @@ Package mk4tcl2.4.9.7-static {
     if {$::tcl_platform(os) == "SunOS" && [Get CC] == "cc"} {
       Patch [Get srcdir]/tcl/mk4tcl.h 9 "#include <tcl.h>\n\n" "#include <tcl.h>\n#undef TCL_WIDE_INT_TYPE\n"
     }
-    Config [Get srcdir-sys]/unix --disable-shared --with-tcl=[Get builddir-sys]/include
     Config [Get srcdir-sys]/unix --disable-shared --with-tcl=[Get builddir-sys]/include
   }
   Make {Run make tcl}
