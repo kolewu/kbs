@@ -1,5 +1,4 @@
 #! /bin/sh
-#TODO wget http://core.tcl.tk/tcl/zip/Tcl.zip?uuid=trunk
 ##
 # @file kbs.tcl
 #	Kitgen Build System
@@ -40,7 +39,7 @@
 # @author <jcw@equi4.com> Initial ideas and kbskit sources
 # @author <r.zaumseil@freenet.de> kbskit TEA extension and development
 #
-# @version 0.4.2
+# @version 0.4.3
 #
 # @copyright 
 #	Call './kbs.tcl license' or search for 'set ::kbs(license)' in this file
@@ -67,10 +66,10 @@ esac ;\
 if test ! -d sources ; then mkdir sources; fi;\
 if test ! -x ${EXE} ; then \
   if test ! -d sources/tcl8.5 ; then \
-    ( cd sources && wget http://prdownloads.sourceforge.net/tcl/tcl8.5.11-src.tar.gz && gunzip -c tcl8.5.11-src.tar.gz | tar xf - && rm tcl8.5.11-src.tar.gz && mv tcl8.5.11 tcl8.5 ) ; \
+    ( cd sources && wget http://prdownloads.sourceforge.net/tcl/tcl8.5.12-src.tar.gz && gunzip -c tcl8.5.12-src.tar.gz | tar xf - && rm tcl8.5.12-src.tar.gz && mv tcl8.5.12 tcl8.5 ) ; \
   fi ;\
   if test ! -d sources/tk8.5 ; then \
-    ( cd sources && wget http://prdownloads.sourceforge.net/tcl/tk8.5.11-src.tar.gz && gunzip -c tk8.5.11-src.tar.gz | tar xf - && rm tk8.5.11-src.tar.gz && mv tk8.5.11 tk8.5 ) ; \
+    ( cd sources && wget http://prdownloads.sourceforge.net/tcl/tk8.5.12-src.tar.gz && gunzip -c tk8.5.12-src.tar.gz | tar xf - && rm tk8.5.12-src.tar.gz && mv tk8.5.12 tk8.5 ) ; \
   fi ;\
   mkdir -p ${PREFIX}/tcl ;\
   ( cd ${PREFIX}/tcl && ../../sources/tcl8.5/${DIR}/configure --disable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} && make install-binaries install-libraries ) ;\
@@ -87,7 +86,7 @@ catch {wm withdraw .};# do not show toplevel in command line mode
 #	- @b version	current version and version of used kbskit
 #	- @b license	license information
 variable ::kbs
-set ::kbs(version) {0.4.2};# current version and version of used kbskit
+set ::kbs(version) {0.4.3};# current version and version of used kbskit
 set ::kbs(license) {
 This software is copyrighted by Rene Zaumseil (the maintainer).
 The following terms apply to all files associated with the software
@@ -1171,14 +1170,15 @@ proc ::kbs::config::Install-Kit {name args} {
 #	Package mentry-3.1 ..
 # 
 # @param[in] pkgname	install name of package, if missing then build from [Get srcdir]
-proc ::kbs::config::Install-Tcl {{pkgname {}}} {
+# @param[in] subdir     source directory under [Get srcdir], default empty
+proc ::kbs::config::Install-Tcl {{pkgname {}} {subdir {}}} {
   if {$pkgname eq {}} {
     set myDst [file join [Get builddir] lib [file tail [Get srcdir]]]
   } else {
     set myDst [file join [Get builddir] lib $pkgname]
   }
   file delete -force $myDst
-  file copy -force [Get srcdir] $myDst
+  file copy -force [Get srcdir]/$subdir $myDst
   if {![file exists [file join $myDst pkgIndex.tcl]]} {
     foreach {myPkg myVer} [split [file tail $myDst] -] break;
     if {$myVer eq {}} {set myVer 0.0}
@@ -1833,33 +1833,38 @@ Package __ {
     cd ../..
     if {$::tcl_platform(platform) == "windows"} {
       set MYEXE "./[exec uname]/bin/tclsh85s.exe kbs.tcl"
-      set my {}
+      set my0 {}
     } else {
       set MYEXE {./kbs.tcl}
-      set my expect5.45
+      set my0 expect5.45
     }
-    puts "+++ [clock format [clock seconds] -format %T] 8.5 -vq -mk"
-    Run {*}$MYEXE -builddir=sf85 -v -r -vq -mk install kbskit8.5
-    puts "+++ [clock format [clock seconds] -format %T] 8.5 -vq-bi"
-    #TODO nap7.0.0 tls1.6.1
-    lappend my\
+    lappend my0\
 	bwidget1.9.5\
-	gridplus2.6\
-	icons1.2 img1.4 itcl3.4 itk3.4 iwidgets4.0.2\
-	memchan2.2.1 mentry3.5\
-	ral0.9.1 rbc0.1\
-	sqlite3.7.9\
-	tablelist5.5 tcllib1.14 tclx8.4 tdom0.8.3 thread2.6.7\
-	tkcon tklib0.5 tktable2.10 treectrl2.4.1 trofs0.4.4\
+	gridplus2.9\
+	icons1.2 img1.4.1\
+	memchan2.2.1 mentry3.6\
+	nsf2.0b3\
+	ral0.10.2 rbc0.1\
+	tablelist5.6 tcllib1.14 tclx8.4 tdom0.8.3\
+	tkcon tkdnd2.6 tklib0.5 tktable2.10 treectrl2.4.1 trofs0.4.6\
 	udp1.0.8\
 	wcb3.4\
 	xotcl1.6.7
+    # 8.5 kbskit
+    Run {*}$MYEXE -builddir=sf85 -v -r -vq -mk install kbskit8.5
+    # 8.5 BI
+    set my $my0
+    lappend my itcl3.4 itk3.4 iwidgets4.0.2 sqlite3.7.14 thread2.6.7
     Run {*}$MYEXE -builddir=sf85 -v -r -vq-bi -bi=$my install kbskit8.5
-    puts "+++ [clock format [clock seconds] -format %T] 8.5 tksqlite"
+    # 8.5 tksqlite
     Run {*}$MYEXE -builddir=sf85 -v -r install tksqlite0.5.8
-    puts "+++ [clock format [clock seconds] -format %T] 8.6 -vq -mk"
+    # 8.6 kbskit
     Run {*}$MYEXE -builddir=sf86 -v -r -vq -mk install kbskit8.6
-    puts "+++ [clock format [clock seconds] -format %T] save 'sf.net/'"
+    # 8.6 BI
+    set my $my0
+    lappend my itk4.0 iwidgets4.1
+    Run {*}$MYEXE -builddir=sf86 -v -r -vq-bi -bi=$my install kbskit8.6
+    # save results under sf.net
     set myPrefix "sf.net/[string map {{ } {}} $::tcl_platform(os)]_"
     foreach myFile [glob sf*/bin/kbs* sf85/bin/tksqlite*] {
       file copy -force $myFile $myPrefix[file tail $myFile]
@@ -1868,6 +1873,13 @@ Package __ {
       puts "+++ [clock format [clock seconds] -format %T] kbs.tgz"
       Run tar czf sf.net/kbs.tgz kbs.tcl sources
     }
+if 0 {;# Testfile
+  catch {package req x}
+  foreach p [lsort [package names]] {
+    if {$p == "vfs::template"} continue
+    puts $p[catch {package req $p}]
+  }
+}
   }
 }
 #@endverbatim
@@ -1882,21 +1894,6 @@ Package _TODO_fossil {
  [Get srcdir]/src/main.mk
   }
   Install {file copy -force [Get builddir]/_TODO_fossil/fossil [Get builddir]/bin/fossil}
-}
-#@endverbatim
-## @defgroup bwidget
-#@verbatim
-Package bwidget1.8.0 {
-  Source {Cvs tcllib.cvs.sourceforge.net:/cvsroot/tcllib -r bwidget-1_8_0 bwidget}
-  Configure {}
-  Install {
-    file delete -force [Get builddir]/lib/[file tail [Get srcdir]]
-    file copy -force [Get srcdir] [Get builddir]/lib
-  }
-  Test {
-    cd [Get builddir]/lib/bwidget1.8.0/demo
-    Run [Get kitgui] demo.tcl
-  }
 }
 #@endverbatim
 ## @defgroup bwidget
@@ -1927,8 +1924,8 @@ Package expect5.45 {
 #@endverbatim
 ## @defgroup gridplus
 #@verbatim
-Package gridplus2.6 {
-  Require {Use icons1.2 tablelist5.5}
+Package gridplus2.9 {
+  Require {Use icons1.2 tablelist5.6}
   Source {Wget http://www.satisoft.com/tcltk/gridplus2/download/gridplus.zip}
   Configure {}
   Install {Tcl}
@@ -1943,12 +1940,12 @@ Package icons1.2 {
 }
 #@endverbatim
 ## @defgroup img
-# @bug Configure: feature request, dtplite is sometimes not available
+# @bug #76 at https://sourceforge.net/p/tkimg/bugs/
 #@verbatim
-Package img1.4 {
-  Source {Svn https://tkimg.svn.sourceforge.net:/svnroot/tkimg/trunk -r 332}
+Package img1.4.1 {
+  Source {Svn https://tkimg.svn.sourceforge.net:/svnroot/tkimg/trunk -r 343}
   Configure {
-    Patch [Get srcdir]/Makefile.in 149 {install: collate install-man
+    Patch [Get srcdir]/Makefile.in 154 {install: collate install-man
 } {install: collate
 }
     Config [Get srcdir-sys]
@@ -1956,7 +1953,7 @@ Package img1.4 {
   Make {Run make}
   Install {
     Run make install
-    Libdir Img1.4
+    Libdir Img1.4.1
   }
   Clean {Run make clean}
 }
@@ -1983,6 +1980,14 @@ Package itk3.4 {
   Clean {Run make clean}
 }
 #@endverbatim
+## @defgroup itk
+#@verbatim
+Package itk4.0 {
+  Source {Wget http://prdownloads.sourceforge.net/kbskit/itk/itk40.tgz}
+  Configure {}
+  Install {Tcl itk4.0 library}
+}
+#@endverbatim
 ## @defgroup iwidgets
 # @bug Source: LD_LIBRARY_PATH setting
 #@verbatim
@@ -1999,6 +2004,15 @@ Package iwidgets4.0.2 {
   Install {Run make install}
   Clean {Run make clean}
   Test {Run make test}
+}
+#@endverbatim
+## @defgroup iwidgets
+#@verbatim
+Package iwidgets4.1 {
+  Require {Use itk4.0}
+  Source {Wget http://prdownloads.sourceforge.net/kbskit/itk/iwidgets41.tgz}
+  Configure {}
+  Install {Tcl iwidgets4.1 library}
 }
 #@endverbatim
 ## @defgroup kbskit
@@ -2076,7 +2090,7 @@ Package kbskit8.6 {
   Make {
     set MYMK "[Get builddir-sys]/lib/mk4tcl2.4.9.7-static/Mk4tcl.a "
     if {$::tcl_platform(platform) == "windows"} {
-      set MYMK "[Get builddir-sys]/lib/libtclstub86s.a -lstdc++"
+      append MYMK "[Get builddir-sys]/lib/libtclstub86s.a -lstdc++"
     } elseif {$::tcl_platform(platform) == "Darwin"} {
       append MYMK "-static-libgcc -lstdc++ -framework CoreFoundation"
     } elseif {$::tcl_platform(os) == "SunOS" && [Get CC] == "cc"} {
@@ -2100,11 +2114,11 @@ Package kbskit8.6 {
       set MYVQ "[Get builddir-sys]/lib/vqtcl4.1/libvqtcl4.1.a [Get builddir-sys]/lib/libtclstub8.6.a"
     }
     if {[Get -threads] in {--enable-threads --enable-threads=yes {}}} {
-      set MYKITVQ "thread2.6.7 tdbc1.0b17 itcl4.0b7"
-      set MYKITMK "thread2.6.7 tdbc1.0b17 itcl4.0b7"
+      set MYKITVQ "thread2.7b1 tdbc1.0b17 itcl4.0b8 sqlite3.7.14"
+      set MYKITMK "thread2.7b1 tdbc1.0b17 itcl4.0b8 sqlite3.7.14"
     } else {
-      set MYKITVQ "tdbc1.0b17 itcl4.0b7"
-      set MYKITMK "tdbc1.0b17 itcl4.0b7"
+      set MYKITVQ "tdbc1.0b17 itcl4.0b8 sqlite3.7.14"
+      set MYKITMK "tdbc1.0b17 itcl4.0b8 sqlite3.7.14"
     }
     if {$::tcl_platform(os) == "Linux"} {
       set MYXFT "-lXft"
@@ -2134,9 +2148,9 @@ Package memchan2.2.1 {
 #@endverbatim
 ## @defgroup mentry
 #@verbatim
-Package mentry3.5 {
+Package mentry3.6 {
   Require {Use wcb3.4}
-  Source {Wget http://www.nemethi.de/mentry/mentry3.5.tar.gz}
+  Source {Wget http://www.nemethi.de/mentry/mentry3.6.tar.gz}
   Configure {}
   Install {Tcl}
 }
@@ -2183,19 +2197,30 @@ Package nap7.0.0 {
 }
 #@endverbatim
 ## @defgroup nsf
+# @bug tclCompile.h not found
 #@verbatim
-Package nsf2.0 {
+Package nsf2.0b3 {
   Source {Wget http://prdownloads.sourceforge.net/next-scripting/nsf2.0b3.tar.gz}
-  Configure {Config [Get srcdir-sys]}
-  Make {Run make}
+  Configure {
+    Patch [Get srcdir]/Makefile.in 195 \
+{		  TCLLIBPATH="$(top_builddir) ${srcdir} $(TCLLIBPATH)"} \
+{		  TCLLIBPATH="${srcdir} $(top_builddir) $(TCLLIBPATH)"}
+    Patch [Get srcdir]/Makefile.in 201 \
+{INCLUDES	= @PKG_INCLUDES@ @TCL_INCLUDES@ @NSF_BUILD_INCLUDE_SPEC@
+} {INCLUDES	= @PKG_INCLUDES@ @TCL_INCLUDES@ @NSF_BUILD_INCLUDE_SPEC@ -I@TCL_SRC_DIR@/generic}
+    Config [Get srcdir-sys]
+  }
+  Make {Run make genstubs
+    Run make
+  }
   Install {Run make install}
   Clean {Run make clean}
 }
 #@endverbatim
 ## @defgroup ral
 #@verbatim
-Package ral0.9.1 {
-  Source {Cvs tclral.cvs.sourceforge.net:/cvsroot/tclral -r VERSION_0_9_1 .}
+Package ral0.10.2 {
+  Source {Cvs tclral.cvs.sourceforge.net:/cvsroot/tclral -r VERSION_0_10_2 .}
   Configure {
     if {[Get sys] eq {unix}} {
       file attributes [Get srcdir]/tclconfig/install-sh -permissions u+x
@@ -2215,11 +2240,13 @@ Package rbc0.1 {
     proc MY {f} {
       set fd [open $f r];set c [read $fd];close $fd;
       regsub -all tkpWinRopModes $c tkpWinRopMode1 c
+      regsub -all interp->result $c Tcl_GetString(Tcl_GetObjResult(interp)) c
       set fd [open $f w];puts $fd $c;close $fd;
     }
     MY [Get srcdir]/generic/rbcGrLine.c
     MY [Get srcdir]/generic/rbcTile.c
     MY [Get srcdir]/generic/rbcWinDraw.c
+    MY [Get srcdir]/generic/rbcVecMath.c
     rename MY {}
     if {[Get sys] eq {unix}} {
       file attributes [Get srcdir]/tclconfig/install-sh -permissions u+x
@@ -2263,13 +2290,13 @@ Package snack2.2 {
 #@endverbatim
 ## @defgroup sqlite
 #@verbatim
-Package sqlite3.7.9 {
-  Source {Wget http://www.sqlite.org/sqlite-autoconf-3070900.tar.gz}
+Package sqlite3.7.14 {
+  Source {Wget http://www.sqlite.org/sqlite-autoconf-3071400.tar.gz}
   Configure {
-#    if {[Get sys] eq {unix}} {
+    if {[Get sys] eq {unix}} {
 #      file attributes [Get srcdir]/configure -permissions u+x
-#      file attributes [Get srcdir]/tclconfig/install-sh -permissions u+x
-#    }
+      file attributes [Get srcdir]/tea/tclconfig/install-sh -permissions u+x
+    }
     Config [Get srcdir-sys]/tea
   }
   Make {Run make}
@@ -2279,58 +2306,16 @@ Package sqlite3.7.9 {
 #@endverbatim
 ## @defgroup tablelist
 #@verbatim
-Package tablelist5.5 {
-  Source {Wget http://www.nemethi.de/tablelist/tablelist5.5.tar.gz}
+Package tablelist5.6 {
+  Source {Wget http://www.nemethi.de/tablelist/tablelist5.6.tar.gz}
   Configure {}
   Install {Tcl}
 }
 #@endverbatim
 ## @defgroup tcl
-# @bug Source: IRIX mkstemp() bug at sourceforge.net/projects/tcl->Tracker->ID:878333
 #@verbatim
 Package tcl8.5 {
-  Source {
-    Wget http://prdownloads.sourceforge.net/tcl/tcl8.5.11-src.tar.gz
-    if {$::tcl_platform(os) eq {IRIX64}} {
-    Patch [Get srcdir]/[Get sys]/tclUnixPipe.c 48 {
-/*
- * Declarations for local functions defined in this file:
- */
-} {static int PipeNr=0;
-/*
- * Declarations for local functions defined in this file:
- */
-}
-    Patch [Get srcdir]/[Get sys]/tclUnixPipe.c 194 {    char fileName[L_tmpnam + 9];} {    char fileName[L_tmpnam + 18];}
-    Patch [Get srcdir]/[Get sys]/tclUnixPipe.c 202 {
-    strcpy(fileName, P_tmpdir);				/* INTL: Native. */
-    if (fileName[strlen(fileName) - 1] != '/') {
-	strcat(fileName, "/");				/* INTL: Native. */
-    }
-    strcat(fileName, "tclXXXXXX");
-} {
-    if (P_tmpdir[strlen(P_tmpdir) - 1] != '/') {
-      snprintf(fileName,L_tmpnam+18,"%s/tcl%.9dXXXXXX",P_tmpdir,PipeNr++);
-    } else {
-      snprintf(fileName,L_tmpnam+18,"%stcl%.9dXXXXXX",P_tmpdir,PipeNr++);
-    }
-}
-    Patch [Get srcdir]/[Get sys]/tclUnixPipe.c 247 {    char fileName[L_tmpnam + 9];} {    char fileName[L_tmpnam + 18];}
-    Patch [Get srcdir]/[Get sys]/tclUnixPipe.c 254 {
-    strcpy(fileName, P_tmpdir);		/* INTL: Native. */
-    if (fileName[strlen(fileName) - 1] != '/') {
-	strcat(fileName, "/");		/* INTL: Native. */
-    }
-    strcat(fileName, "tclXXXXXX");
-} {
-    if (P_tmpdir[strlen(P_tmpdir) - 1] != '/') {
-      snprintf(fileName,L_tmpnam+18,"%s/tcl%.9dXXXXXX",P_tmpdir,PipeNr++);
-    } else {
-      snprintf(fileName,L_tmpnam+18,"%stcl%.9dXXXXXX",P_tmpdir,PipeNr++);
-    }
-}
-    }
-  }
+  Source {Wget http://prdownloads.sourceforge.net/tcl/tcl8.5.12-src.tar.gz}
   Configure {Config [Get srcdir-sys]/[Get sys]}
   Make {Run make}
   Install {Run make install-binaries install-libraries install-private-headers}
@@ -2352,13 +2337,13 @@ Package tcl8.5-static {
 ## @defgroup tcl
 #@verbatim
 Package tcl8.6 {
-  Source {Wget http://prdownloads.sourceforge.net/tcl/tcl8.6b2-src.tar.gz}
+  Source {Wget http://prdownloads.sourceforge.net/tcl/tcl8.6b3-src.tar.gz}
   Configure {
-    Patch [Get srcdir]/win/Makefile.in 782 {	          $$i/configure --with-tcl=$(PWD) } {	          $$i/configure --with-tcl=$(LIB_INSTALL_DIR) }
+    Patch [Get srcdir]/win/Makefile.in 760 {	          $$i/configure --with-tcl=$(PWD) } {	          $$i/configure --with-tcl=$(LIB_INSTALL_DIR) }
     Config [Get srcdir-sys]/[Get sys]
   }
   Make {Run make}
-  Install {Run make install}
+  Install {Run make install install-private-headers}
   Clean {Run make clean}
   Test {Run make test}
 }
@@ -2368,12 +2353,12 @@ Package tcl8.6 {
 Package tcl8.6-static {
   Source {Link tcl8.6}
   Configure {
-    Patch [Get srcdir]/win/Makefile.in 782 {	          $$i/configure --with-tcl=$(PWD) } {	          $$i/configure --with-tcl=$(LIB_INSTALL_DIR) }
+    Patch [Get srcdir]/win/Makefile.in 760 {	          $$i/configure --with-tcl=$(PWD) } {	          $$i/configure --with-tcl=$(LIB_INSTALL_DIR) }
     Config [Get srcdir-sys]/[Get sys] --disable-shared
   }
   Make {Run make}
   Install {
-    Run make install
+    Run make install install-private-headers
     if {[Get sys] eq {win}} {
       file copy -force [Get builddir]/tcl8.6-static/libtclstub86.a [Get builddir]/lib/libtclstub86s.a
       file copy -force [Get builddir]/tcl8.6-static/libtcl86.a [Get builddir]/lib/libtcl86s.a
@@ -2421,7 +2406,11 @@ Package tclx8.4 {
 ## @defgroup tdom
 #@verbatim
 Package tdom0.8.3 {
-  Source {Wget https://github.com/downloads/tDOM/tdom/tDOM-0.8.3.tgz}
+  Source {#Wget https://github.com/downloads/tDOM/tdom/tDOM-0.8.3.tgz
+    Wget https://github.com/tDOM/tdom/tarball/8667ce5
+    Tgz [glob -nocomplain [Get builddir-sys]/../sources/8667ce5*]
+    file delete -force [glob -nocomplain [Get builddir-sys]/../sources/8667ce5*]
+  }
   Configure {Config [Get srcdir-sys]}
   Make {Run make binaries}
   Install {Run make install-binaries}
@@ -2452,7 +2441,7 @@ Package thread2.6.7-static {
 #@verbatim
 Package tk8.5 {
   Require {Use tcl8.5}
-  Source {Wget http://prdownloads.sourceforge.net/tcl/tk8.5.11-src.tar.gz}
+  Source {Wget http://prdownloads.sourceforge.net/tcl/tk8.5.12-src.tar.gz}
   Configure {Config [Get srcdir-sys]/[Get sys]}
   Make {Run make}
   Install {Run make install install-private-headers}
@@ -2476,10 +2465,10 @@ Package tk8.5-static {
 #@verbatim
 Package tk8.6 {
   Require {Use tcl8.6}
-  Source {Wget http://prdownloads.sourceforge.net/tcl/tk8.6b2-src.tar.gz}
+  Source {Wget http://prdownloads.sourceforge.net/tcl/tk8.6b3-src.tar.gz}
   Configure {Config [Get srcdir-sys]/[Get sys]}
   Make {Run make}
-  Install {Run make install}
+  Install {Run make install install-private-headers}
   Clean {Run make clean}
   Test {Run make test}
 }
@@ -2491,7 +2480,7 @@ Package tk8.6-static {
   Source {Link tk8.6}
   Configure {Config [Get srcdir-sys]/[Get sys] --disable-shared}
   Make {Run make}
-  Install {Run make install
+  Install {Run make install install-private-headers
     if {[Get sys] eq {win}} {
       file copy -force [Get builddir]/tk8.6-static/libtkstub86.a [Get builddir]/lib/libtkstub86s.a
       file copy -force [Get builddir]/tk8.6-static/libtk86.a [Get builddir]/lib/libtk86s.a
@@ -2509,6 +2498,17 @@ Package tkcon {
   Install {Tcl}
 }
 #@endverbatim
+## @defgroup tkdnd
+#@verbatim
+Package tkdnd2.6 {
+  Source {Wget http://prdownloads.sourceforge.net/tkdnd/TkDND/TkDND%202.6/tkdnd2.6-src.tar.gz}
+  Configure {Config [Get srcdir-sys]}
+  Make {Run make}
+  Install {Run make install}
+  Clean {Run make clean}
+  Test {Run make test}
+}
+#@endverbatim
 ## @defgroup tklib
 #@verbatim
 Package tklib0.5 {
@@ -2523,7 +2523,7 @@ Package tklib0.5 {
 ## @defgroup tksqlite
 #@verbatim
 Package tksqlite0.5.8 {
-  Require {Use kbskit8.5 sdx.kit tktable2.10 treectrl2.4.1 sqlite3.7.9}
+  Require {Use kbskit8.5 sdx.kit tktable2.10 treectrl2.4.1 sqlite3.7.14}
   Source {Wget http://reddog.s35.xrea.com/software/tksqlite-0.5.8.tar.gz}
   Configure {
     Patch [Get srcdir]/tksqlite.tcl 14708\
@@ -2531,7 +2531,7 @@ Package tksqlite0.5.8 {
 {		Cmd::openDB [file normalize [file join $::starkit::topdir .. $_file]]}
     Kit {source $::starkit::topdir/tksqlite.tcl} Tk
   }
-  Make {Kit tksqlite sqlite3.7.9 tktable2.10 treectrl2.4.1}
+  Make {Kit tksqlite sqlite3.7.14 tktable2.10 treectrl2.4.1}
   Install {Kit tksqlite -vq-gui}
   Clean {file delete -force tksqlite.vfs}
   Test {Kit tksqlite}
@@ -2541,7 +2541,10 @@ Package tksqlite0.5.8 {
 #@verbatim
 Package tktable2.10 {
   Source {Cvs tktable.cvs.sourceforge.net:/cvsroot/tktable -r tktable-2-10-0 tktable}
-  Configure {Config [Get srcdir-sys]}
+  Configure {
+    Patch [Get srcdir]/generic/tkTable.h 21 {#include <tk.h>} {#include <tkInt.h>}
+    Config [Get srcdir-sys]
+  }
   Make {Run make binaries}
   Install {
     Run make install-binaries
@@ -2568,7 +2571,7 @@ Package treectrl2.4.1 {
   Source {Wget http://prdownloads.sourceforge.net/sourceforge/tktreectrl/tktreectrl-2.4.1.tar.gz}
   Configure {
     Config [Get srcdir-sys] --with-tkinclude=[Get TK_SRC_DIR]/generic
-#    Patch [Get srcdir]/generic/tkTreeCtrl.c 4217 {	SRCCOPY | CAPTUREBLT);} {	SRCCOPY);}
+#TODO    Patch [Get srcdir]/generic/tkTreeCtrl.c 4217 {	SRCCOPY | CAPTUREBLT);} {	SRCCOPY);}
   }
   Make {Run make}
   Install {Run make install-binaries install-libraries}
@@ -2577,9 +2580,14 @@ Package treectrl2.4.1 {
 #@endverbatim
 ## @defgroup trofs
 #@verbatim
-Package trofs0.4.4 {
-  Source {Wget http://math.nist.gov/~DPorter/tcltk/trofs/trofs0.4.4.tar.gz}
-  Configure {Config [Get srcdir-sys]}
+Package trofs0.4.6 {
+  Source {Wget http://math.nist.gov/~DPorter/tcltk/trofs/trofs0.4.6.tar.gz}
+  Configure {
+    Patch [Get srcdir]/Makefile.in 148 \
+{DEFS		= @DEFS@ $(PKG_CFLAGS)} \
+{DEFS		= @DEFS@ $(PKG_CFLAGS) -D_USE_32BIT_TIME_T}
+    Config [Get srcdir-sys]
+  }
   Make {Run make binaries}
   Install {Run make install-binaries}
   Clean {Run make clean}
@@ -2595,11 +2603,7 @@ Package udp1.0.8 {
     }
     Config [Get srcdir-sys]
   }
-  Make {
-    # because of IRIX64
-    set MYFLAGS "[lsearch -glob -inline [Get TCL_DEFS] -Dsocklen_t=*]"
-    Run make PKG_CFLAGS=$MYFLAGS binaries
-  }
+  Make {Run make binaries}
   Install {Run make install-binaries}
   Clean {Run make clean}
 }
@@ -2608,7 +2612,16 @@ Package udp1.0.8 {
 #@verbatim
 Package vfs1.4 {
   Source {Cvs tclvfs.cvs.sourceforge.net:/cvsroot/tclvfs -D 2012-01-10 tclvfs}
-  Configure {Config [Get srcdir-sys] --with-tclinclude=[Get builddir-sys]/include}
+  Configure {
+    Patch [Get srcdir]/Makefile.in 143 \
+{INCLUDES	= @PKG_INCLUDES@ @TCL_INCLUDES@}\
+{INCLUDES	= @TCL_INCLUDES@}
+    Patch [Get srcdir]/Makefile.in 147 \
+{DEFS		= @DEFS@ $(PKG_CFLAGS)
+} {DEFS		= @DEFS@ $(PKG_CFLAGS) -D_USE_32BIT_TIME_T
+} 
+    Config [Get srcdir-sys] --with-tclinclude=[Get builddir-sys]/include
+  }
   Make {Run make}
   Install {Run make install-binaries}
   Clean {Run make clean}
@@ -2618,7 +2631,15 @@ Package vfs1.4 {
 #@verbatim
 Package vfs1.4-static {
   Source {Link vfs1.4}
-  Configure {Config [Get srcdir-sys] --disable-shared --with-tclinclude=[Get builddir-sys]/include}
+  Configure {
+    Patch [Get srcdir]/Makefile.in 143 \
+{INCLUDES	= @PKG_INCLUDES@ @TCL_INCLUDES@}\
+{INCLUDES	= @TCL_INCLUDES@}
+    Patch [Get srcdir]/Makefile.in 147 \
+{DEFS		= @DEFS@ $(PKG_CFLAGS)
+} {DEFS		= @DEFS@ $(PKG_CFLAGS) -D_USE_32BIT_TIME_T
+} 
+    Config [Get srcdir-sys] --disable-shared --with-tclinclude=[Get builddir-sys]/include}
   Make {Run make}
   Install {Run make install-binaries}
   Clean {Run make clean}
@@ -2704,11 +2725,11 @@ Package z_tcl0.1 {
 Package z_gse0.1 {
   Require {
     Use z_c0.1 z_tcl0.1
-    Use tklib0.5 sqlite3.7.9 tktable2.10 img1.4 itcl3.4 rbc0.1 tablelist5.5
+    Use tklib0.5 sqlite3.7.14 tktable2.10 img1.4.1 itcl3.4 rbc0.1 tablelist5.6
   }
   Source { Link z_gse }
   Configure {Kit {::gse {*}$argv} gse}
-  Make { Kit z_gse tklib0.5/autoscroll tklib0.5/tooltip tklib0.5/style z_c0.1 z_tcl0.1 sqlite3.7.9 tktable2.10 img1.4 itcl3.4 rbc0.1 tablelist5.5}
+  Make { Kit z_gse tklib0.5/autoscroll tklib0.5/tooltip tklib0.5/style z_c0.1 z_tcl0.1 sqlite3.7.14 tktable2.10 img1.4.1 itcl3.4 rbc0.1 tablelist5.6}
   Install {Kit z_gse -vq-gui}
   Clean {Kit z_gse}
 }
@@ -2783,13 +2804,13 @@ Package tdbc {
 ## @defgroup wikit
 #@verbatim
 Package wubwikit {
-  Require {Use kbskit8.6 wub wikitcl tdbc tcllib1.14 sqlite3.7.9}
+  Require {Use kbskit8.6 wub wikitcl tdbc tcllib1.14 sqlite3.7.14}
   Source {Svn http://wubwikit.googlecode.com/svn/trunk -r 112}
   Configure {
     Run cp [Get srcdir]/wubwikit_main.tcl main.tcl
   }
   Make {
-    Kit wubwikit tcllib1.14 sqlite3.7.9
+    Kit wubwikit tcllib1.14 sqlite3.7.14
     Run cp [Get srcdir]/local.tcl wubwikit.vfs/deflocal.tcl
     Run mkdir wubwikit.vfs/lib/tdbcsqlite
     Run cp [Get srcdir]/../tdbc/tdbcsqlite3/library/tdbcsqlite3.tcl wubwikit.vfs/lib/tdbcsqlite

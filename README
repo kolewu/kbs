@@ -1,9 +1,9 @@
-kbs -- kitgen build system (version 0.4.2 for tcl/tk 8.5.11 and 8.6b2)
+kbs -- kitgen build system (version 0.4.3 for tcl/tk 8.5.12 and 8.6b3)
 ==========================
 
 The system can generate [Tclkit]  and [Tclkit Lite] executables and
 Tcl packages for different operating systems.
-Tested are Linux, SunOS, Windows and Irix.
+Tested are Linux, SunOS and Windows.
   [Tclkit]: http://www.equi4.com/tclkit/tclkitlite.html
   [Tclkit Lite]: http://www.equi4.com/tclkit/tclkitlite.html
 Additional documentation can be found under <http://wiki.tcl.tk/18146>
@@ -22,11 +22,15 @@ Sources are available from <http://sourceforge.net/projects/kbskit>
    *kbsvq*gui* - tk static inserted
   Batteries included interpreter:
    *kbsvq*bi
-  with:
-    bwidget1.9.5 gridplus2.6 icons1.2 img1.4 itcl3.4 itk3.4 iwidgets4.0.2\
-    memchan2.2.1 mentry3.5 ral0.9.1 rbc0.1 sqlite3.7.9
-    tablelist5.5 tcllib1.14 tclx8.4 tdom0.8.3 thread2.6.7 tkcon\
-    tklib0.5 tktable2.10 treectrl2.4.1 trofs0.4.4 udp1.0.8 wcb3.4 xotcl1.6.7
+  with (8.5 and 8.6):
+    bwidget1.9.5 gridplus2.9 icons1.2 img1.4.1
+    memchan2.2.1 mentry3.6 nsf2.0b3 ral0.10 rbc0.1 sqlite3.7.14
+    tablelist5.6 tcllib1.14 tclx8.4 tdom0.8.3 thread2.6.7 tkcon tkdnd2.6
+    tklib0.5 tktable2.10 treectrl2.4.1 trofs0.4.6 udp1.0.8 wcb3.4 xotcl1.6.7
+  only 8.5:
+    itcl3.4 itk3.4 iwidgets4.0.2
+  only 8.6:
+    itcl4.0 itk4.0 iwidgets4.1
 
 Quick start
 -----------

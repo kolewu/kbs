@@ -1,4 +1,23 @@
 2012-01-16  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.4.3
+	* kbs.tcl:
+	- BI builds for 8.5 and 8.6
+	new:
+	- nsf 2.0b3
+	- tkdnd 2.6
+	changed:
+	- tcl/tk 8.5.12
+	- tcl/tk 8.6b3
+	- gridplus 2.9
+	- img 1.4.1 (svn #)
+	- itk 4.0
+	- iwidgets 4.1
+	- mentry 3.6
+	- ral 0.10.2
+	- sqlite 3.7.14
+	- tablelist 5.6
+	- trofs 0.4.6
+2012-01-16  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.4.2
 	* kbs.tcl:
 	- use doxygen mode for documentation
@@ -20,7 +39,7 @@
 	- treectrl 2.4.1
 	- xotcl 1.6.7
 	- version from date (2012-01-10)
-	  - vfs 1.4
+	- vfs 1.4
 2010-11-19  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.4.1
 	* kbs.tcl:
