@@ -1,4 +1,4 @@
-kbs -- kitgen build system (version 0.4.3 for tcl/tk 8.5.12 and 8.6b3)
+kbs -- kitgen build system (version 0.4.4 for tcl/tk 8.5.13 and 8.6.0)
 ==========================
 
 The system can generate [Tclkit]  and [Tclkit Lite] executables and
@@ -23,9 +23,9 @@ Sources are available from <http://sourceforge.net/projects/kbskit>
   Batteries included interpreter:
    *kbsvq*bi
   with (8.5 and 8.6):
-    bwidget1.9.5 gridplus2.9 icons1.2 img1.4.1
-    memchan2.2.1 mentry3.6 nsf2.0b3 ral0.10 rbc0.1 sqlite3.7.14
-    tablelist5.6 tcllib1.14 tclx8.4 tdom0.8.3 thread2.6.7 tkcon tkdnd2.6
+    bwidget1.9.6 gridplus2.9 icons1.2 img1.4.1
+    memchan2.3 mentry3.6 nsf2.0b3 ral0.10 rbc0.1 sqlite3.7.15.1
+    tablelist5.7 tcllib1.14 tclx8.4 tdom0.8.3 thread2.6.7 tkcon tkdnd2.6
     tklib0.5 tktable2.10 treectrl2.4.1 trofs0.4.6 udp1.0.8 wcb3.4 xotcl1.6.7
   only 8.5:
     itcl3.4 itk3.4 iwidgets4.0.2
@@ -39,9 +39,9 @@ Quick start
    * Build [Tclkit Lite] executables:
   ./kbs.tcl -r -vq install kbskit8.5
    * Build user defined batteries included executables:
-  ./kbs.tcl -r -vqi-bi -bi=".." install kbskit8.5
+  ./kbs.tcl -r -vqi-bi -bi=".." install kbskit8.6
    * Build kit-file:
-  ./kbs.tcl -r install kbspkg8.5
+  ./kbs.tcl -r install kbspkg8.6
    * Show used configuration:
   ./kbs.tcl config
    * Start graphical user interface:

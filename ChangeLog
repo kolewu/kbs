@@ -1,4 +1,16 @@
-2012-01-16  Rene Zaumseil <r.zaumseil@freenet.de>
+2013-01-07  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.4.4
+	* kbs.tcl:
+	- switch to tcl8.6 interpreter
+	changed:
+	- tcl/tk 8.6.0
+	- tcl/tk 8.5.13
+	- bwidget 1.9.6
+	- memchan 2.3
+	- sqlite 3.7.15.1
+	- tablelist 5.7
+	- tcloo 1.0
+2012-10-03  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.4.3
 	* kbs.tcl:
 	- BI builds for 8.5 and 8.6
