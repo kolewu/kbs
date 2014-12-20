@@ -1,4 +1,18 @@
-2014-02.11  Rene Zaumseil <r.zaumseil@freenet.de>
+2014-12-20  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.4.6
+	* kbs.tcl:
+	- switch to tcl8.6.3 interpreter
+	- new -bzip2 option, thanks to patch of Taylor Venable
+	changed:
+	- tcl/tk 8.6.3
+	- bwidget 1.9.8
+	- tablelist 5.12.1
+	- tcllib 1.16
+	- tkdnd 2.7
+	- tklib 0.6
+	- xotcl 1.6.8
+	- tksqlite 0.5.11
+2014-02-11  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.4.5
 	* kbs.tcl:
 	- switch to tcl8.6.1 interpreter
