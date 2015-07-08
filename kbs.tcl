@@ -39,7 +39,7 @@
 # @author <jcw@equi4.com> Initial ideas and kbskit sources
 # @author <r.zaumseil@freenet.de> kbskit TEA extension and development
 #
-# @version 0.4.6
+# @version 0.4.7
 #
 # @copyright 
 #	Call './kbs.tcl license' or search for 'set ::kbs(license)' in this file
@@ -68,10 +68,10 @@ esac ;\
 if test ! -d sources ; then mkdir sources; fi;\
 if test ! -x ${EXE} ; then \
   if test ! -d sources/tcl8.6 ; then \
-    ( cd sources && wget http://prdownloads.sourceforge.net/tcl/tcl8.6.3-src.tar.gz && gunzip -c tcl8.6.3-src.tar.gz | tar xf - && rm tcl8.6.3-src.tar.gz && mv tcl8.6.3 tcl8.6 ) ; \
+    ( cd sources && wget http://prdownloads.sourceforge.net/tcl/tcl8.6.4-src.tar.gz && gunzip -c tcl8.6.4-src.tar.gz | tar xf - && rm tcl8.6.4-src.tar.gz && mv tcl8.6.4 tcl8.6 ) ; \
   fi ;\
   if test ! -d sources/tk8.6 ; then \
-    ( cd sources && wget http://prdownloads.sourceforge.net/tcl/tk8.6.3-src.tar.gz && gunzip -c tk8.6.3-src.tar.gz | tar xf - && rm tk8.6.3-src.tar.gz && mv tk8.6.3 tk8.6 ) ; \
+    ( cd sources && wget http://prdownloads.sourceforge.net/tcl/tk8.6.4-src.tar.gz && gunzip -c tk8.6.4-src.tar.gz | tar xf - && rm tk8.6.4-src.tar.gz && mv tk8.6.4 tk8.6 ) ; \
   fi ;\
   mkdir -p ${PREFIX}/tcl ;\
   ( cd ${PREFIX}/tcl && ../../sources/tcl8.6/${DIR}/configure --disable-shared --prefix=${PREFIX} --exec-prefix=${PREFIX} && make install-binaries install-libraries ) ;\
@@ -88,7 +88,7 @@ catch {wm withdraw .};# do not show toplevel in command line mode
 #	- @b version	current version and version of used kbskit
 #	- @b license	license information
 variable ::kbs
-set ::kbs(version) {0.4.6};# current version and version of used kbskit
+set ::kbs(version) {0.4.7};# current version and version of used kbskit
 set ::kbs(license) {
 This software is copyrighted by Rene Zaumseil (the maintainer).
 The following terms apply to all files associated with the software
@@ -161,6 +161,7 @@ options (configuration variables are available with \[Get ..\]):
   -tar=?command?    set configuration variable 'exec-tar' (default is 'tar')
   -gzip=?command?   set configuration variable 'exec-gzip' (default is 'gzip')
   -bzip2=?command?  set configuration variable 'exec-bzip2' (default is 'bzip2')
+  -git=?command?    set configuration variable 'exec-git' (default is 'git')
   -unzip=?command?  set configuration variable 'exec-unzip' (default is 'unzip')
   -wget=?command?   set configuration variable 'exec-wget' (default is 'wget')
   -doxygen=?command? set configuration variable 'exec-doxygen'
@@ -535,6 +536,7 @@ namespace eval ::kbs::config {
   set _(exec-tar)	[lindex "[auto_execok tar] tar" 0]
   set _(exec-gzip)	[lindex "[auto_execok gzip] gzip" 0]
   set _(exec-bzip2)	[lindex "[auto_execok bzip2] bzip2" 0]
+  set _(exec-git)	[lindex "[auto_execok git] git" 0]
   set _(exec-unzip)	[lindex "[auto_execok unzip] unzip" 0]
   set _(exec-wget)	[lindex "[auto_execok wget] wget" 0]
   set _(exec-doxygen)	[lindex "[auto_execok doxygen] doxygen" 0]
@@ -713,7 +715,7 @@ proc ::kbs::config::Require-Use {args} {
         if {$ignore == 0} {
           return -code error "Require failed for: $package"
         }
-        foreach my {Link Cvs Svn Tgz Tbz2 Zip Http Wget Script Kit Tcl Libdir} {
+        foreach my {Link Cvs Svn Git Tgz Tbz2 Zip Http Wget Script Kit Tcl Libdir} {
           interp alias $interp $my;# clear specific procedures
         }
       }
@@ -755,12 +757,12 @@ proc ::kbs::config::Source {script} {
   variable _
 
   ::kbs::gui::_state -running "" -package $package
-  foreach my {Script Http Wget Link Cvs Svn Tgz Tbz2 Zip} {
+  foreach my {Script Http Wget Link Cvs Svn Git Tgz Tbz2 Zip} {
     interp alias $interp $my {} ::kbs::config::Source- $my
   }
   array set _ {srcdir {} srcdir-sys {}}
   $interp eval $script
-  foreach my {Script Http Wget Link Cvs Svn Tgz Tbz2 Zip} {
+  foreach my {Script Http Wget Link Cvs Svn Git Tgz Tbz2 Zip} {
     interp alias $interp $my
   }
   if {$_(srcdir) eq {}} {
@@ -776,6 +778,7 @@ proc ::kbs::config::Source {script} {
 #	Script tcl-script
 #	Cvs path args
 #	Svn args
+#	Git args
 #	Http url
 #	Wget file
 #	Tgz file
@@ -828,7 +831,7 @@ proc ::kbs::config::Source- {type args} {
         if {$args eq {}} { set args [file tail $myPath] }
         if {[string first @ $myPath] < 0} {set myPath :pserver:anonymous@$myPath}
         puts "=== Source $type $package"
-if {[catch {Run cvs -d $myPath -z3 co -P -d $package {*}$args} myMsg]} {
+	if {[catch {Run $_(exec-cvs) -d $myPath -z3 co -P -d $package {*}$args} myMsg]} {
           file delete -force $myDir
           if {$verbose} {puts $myMsg}
         }
@@ -837,8 +840,30 @@ if {[catch {Run cvs -d $myPath -z3 co -P -d $package {*}$args} myMsg]} {
       set myDir [file join $maindir sources $package]
         if {![file exists $myDir]} {
         puts "=== Source $type $package"
-        if {[catch {Run svn co {*}$args $package} myMsg]} {
+        if {[catch {Run $_(exec-svn) co {*}$args $package} myMsg]} {
           file delete -force $myDir
+          if {$verbose} {puts $myMsg}
+        }
+      }
+    } Git {
+      set myDir [file join $maindir sources $package]
+      if {![file exists $myDir]} {
+        puts "=== Source $type $package"
+	if {[catch {Run $_(exec-git) clone {*}$args $package} myMsg]} {
+	  file delete -force $myDir
+          if {$verbose} {puts $myMsg}
+        }
+      } else {
+        puts "=== Source update $type $package"
+        if {[catch {
+	  set myOldpwd [pwd]
+	  cd $package
+	  Run $_(exec-git) pull
+	  cd $myOldpwd
+	} myMsg]} {
+	  catch {cd $myOldpwd}
+	  puts "=== Source update failed $type $package (ignored)"
+	  #file delete -force $myDir
           if {$verbose} {puts $myMsg}
         }
       }
@@ -1856,17 +1881,18 @@ Package __ {
       set MYEXE {./kbs.tcl}
       set my0 expect5.45
     }
+    #
     lappend my0\
 	bwidget1.9.8\
 	gridplus2.10\
-	icons1.2 img1.4.1\
-	memchan2.3 mentry3.6\
-	nsf2.0b5\
-	ral0.10.2\
-	tablelist5.12.1 tcllib1.16 tclx8.4 tdom0.8.3\
-	tkcon tkdnd2.7 tklib0.6 tktable2.10 treectrl2.4.1 trofs0.4.6\
-	udp1.0.8\
-	wcb3.4\
+	icons1.2 img1.4.3\
+	memchan2.3 mentry3.7\
+	nsf2.0.0\
+	ral0.11.2\
+	tablelist5.13 tcllib1.17 tclx8.4 tdom0.8.3\
+	tkcon tkdnd2.8 tklib0.6 tkpath0.3.3 tktable2.10 treectrl2.4.1 trofs0.4.8\
+	udp1.0.11\
+	wcb3.5\
 	xotcl1.6.8
     if {$::tcl_platform(os) != "Darwin"} {lappend my0 rbc0.1}
     # 8.6 kbskit
@@ -1925,7 +1951,7 @@ Package expect5.45 {
 ## @defgroup gridplus
 #@verbatim
 Package gridplus2.10 {
-  Require {Use icons1.2 tablelist5.12.1}
+  Require {Use icons1.2 tablelist5.13}
   Source {Wget http://www.satisoft.com/tcltk/gridplus2/download/gridplus.zip}
   Configure {}
   Install {Tcl}
@@ -1954,6 +1980,18 @@ Package img1.4.1 {
   Install {
     Run make install
     Libdir Img1.4.1
+  }
+  Clean {Run make clean}
+}
+Package img1.4.3 {
+  Source {Svn https://svn.code.sf.net/p/tkimg/code/trunk -r 374}
+  Configure {
+    Config [Get srcdir-sys]
+  }
+  Make {Run make collate}
+  Install {
+    Run make install-libraries
+    Libdir Img1.4.3
   }
   Clean {Run make clean}
 }
@@ -2102,23 +2140,21 @@ Package kbskit8.6 {
     }
     if {$::tcl_platform(platform) == "windows"} {
       set MYCLI "[Get builddir-sys]/lib/libtcl86s.a"
-      append MYCLI " [Get builddir-sys]/lib/libz.a"
       append MYCLI " [Get builddir-sys]/lib/vfs1.4.1/vfs141.a"
       set MYGUI "[Get builddir-sys]/lib/libtk86s.a"
       set MYVQ "[Get builddir-sys]/lib/vqtcl4.1/vqtcl41.a [Get builddir-sys]/lib/libtclstub86s.a"
     } else {
       set MYCLI "[Get builddir-sys]/lib/libtcl8.6.a"
-      append MYCLI " [Get builddir-sys]/lib/libz.a"
       append MYCLI " [Get builddir-sys]/lib/vfs1.4.1/libvfs1.4.1.a"
       set MYGUI "[Get builddir-sys]/lib/libtk8.6.a"
       set MYVQ "[Get builddir-sys]/lib/vqtcl4.1/libvqtcl4.1.a [Get builddir-sys]/lib/libtclstub8.6.a"
     }
     if {[Get -threads] in {--enable-threads --enable-threads=yes {}}} {
-      set MYKITVQ "thread2.7.1 tdbc1.0.2 itcl4.0.2 sqlite3.8.7.1 tdbcmysql1.0.2 tdbcodbc1.0.2 tdbcpostgres1.0.2"
-      set MYKITMK "thread2.7.1 tdbc1.0.2 itcl4.0.2 sqlite3.8.7.1 tdbcmysql1.0.2 tdbcodbc1.0.2 tdbcpostgres1.0.2"
+      set MYKITVQ "thread2.7.2 tdbc1.0.3 itcl4.0.3 sqlite3.8.8.3 tdbcmysql1.0.3 tdbcodbc1.0.3 tdbcpostgres1.0.3"
+      set MYKITMK "thread2.7.2 tdbc1.0.3 itcl4.0.3 sqlite3.8.8.3 tdbcmysql1.0.3 tdbcodbc1.0.3 tdbcpostgres1.0.3"
     } else {
-      set MYKITVQ "tdbc1.0.2 itcl4.0.2 sqlite3.8.7.1 tdbcmysql1.0.2 tdbcodbc1.0.2 tdbcpostgres1.0.2"
-      set MYKITMK "tdbc1.0.2 itcl4.0.2 sqlite3.8.7.1 tdbcmysql1.0.2 tdbcodbc1.0.2 tdbcpostgres1.0.2"
+      set MYKITVQ "tdbc1.0.3 itcl4.0.3 sqlite3.8.8.3 tdbcmysql1.0.3 tdbcodbc1.0.3 tdbcpostgres1.0.3"
+      set MYKITMK "tdbc1.0.3 itcl4.0.3 sqlite3.8.8.3 tdbcmysql1.0.3 tdbcodbc1.0.3 tdbcpostgres1.0.3"
     }
     foreach my [Get kit] {
       Run make MYCLI=$MYCLI MYGUI=$MYGUI MYVQ=$MYVQ MYKITVQ=$MYKITVQ MYMK=$MYMK MYKITMK=$MYKITMK MYKITBI=[Get bi] all-$my
@@ -2128,7 +2164,7 @@ Package kbskit8.6 {
   Clean {Run make clean}
 }
 #@endverbatim
-## @defgroup memchan
+# @defgroup memchan
 #@verbatim
 Package memchan2.3 {
   Source {Wget http://prdownloads.sourceforge.net/memchan/Memchan2.3.tar.gz}
@@ -2143,9 +2179,9 @@ Package memchan2.3 {
 #@endverbatim
 ## @defgroup mentry
 #@verbatim
-Package mentry3.6 {
-  Require {Use wcb3.4}
-  Source {Wget http://www.nemethi.de/mentry/mentry3.6.tar.gz}
+Package mentry3.7 {
+  Require {Use wcb3.5}
+  Source {Wget http://www.nemethi.de/mentry/mentry3.7.tar.gz}
   Configure {}
   Install {Tcl}
 }
@@ -2194,6 +2230,22 @@ Package nap7.0.0 {
 ## @defgroup nsf
 # @bug tclCompile.h not found
 #@verbatim
+Package nsf2.0.0 {
+  Source {Wget http://prdownloads.sourceforge.net/next-scripting/nsf2.0.0.tar.gz}
+  Configure {
+    Patch [Get srcdir]/Makefile.in 213 \
+{INCLUDES	= @PKG_INCLUDES@ @TCL_INCLUDES@ @NSF_BUILD_INCLUDE_SPEC@
+} "INCLUDES	= @PKG_INCLUDES@ @TCL_INCLUDES@ @NSF_BUILD_INCLUDE_SPEC@ -I@TCL_SRC_DIR@/generic -I[Get srcdir-sys]/generic
+"
+    Config [Get srcdir-sys]
+  }
+  Make {
+#    Run make genstubs
+    Run make
+  }
+  Install {Run make install}
+  Clean {Run make clean}
+}
 Package nsf2.0b5 {
   Source {Wget http://prdownloads.sourceforge.net/next-scripting/nsf2.0b5.tar.gz}
   Configure {
@@ -2225,6 +2277,15 @@ Package ral0.10.2 {
   }
   Make {Run make CPPFLAGS=-I[Get srcdir-sys]/../tcl8.5/libtommath binaries}
   Install {Run make install-binaries}
+  Clean {Run make clean}
+}
+Package ral0.11.2 {
+  Source {Wget http://prdownloads.sourceforge.net/tclral/tclral-0.11.2.tar.gz}
+  Configure {
+    Config [Get srcdir-sys]
+  }
+  Make {Run make binaries libraries}
+  Install {Run make install-binaries install-libraries}
   Clean {Run make clean}
 }
 #@endverbatim
@@ -2275,8 +2336,8 @@ Package snack2.2 {
 #@endverbatim
 ## @defgroup tablelist
 #@verbatim
-Package tablelist5.12.1 {
-  Source {Wget http://www.nemethi.de/tablelist/tablelist5.12.1.tar.gz}
+Package tablelist5.13 {
+  Source {Wget http://www.nemethi.de/tablelist/tablelist5.13.tar.gz}
   Configure {}
   Install {Tcl}
 }
@@ -2284,7 +2345,7 @@ Package tablelist5.12.1 {
 ## @defgroup tcl
 #@verbatim
 Package tcl8.5 {
-  Source {Wget http://prdownloads.sourceforge.net/tcl/tcl8.5.15-src.tar.gz}
+  Source {Wget http://prdownloads.sourceforge.net/tcl/tcl8.5.18-src.tar.gz}
   Configure {Config [Get srcdir-sys]/[Get sys]}
   Make {Run make}
   Install {Run make install-binaries install-libraries install-private-headers}
@@ -2306,7 +2367,7 @@ Package tcl8.5-static {
 ## @defgroup tcl
 #@verbatim
 Package tcl8.6 {
-  Source {Wget http://prdownloads.sourceforge.net/tcl/tcl8.6.3-src.tar.gz}
+  Source {Wget http://prdownloads.sourceforge.net/tcl/tcl8.6.4-src.tar.gz}
   Configure {Config [Get srcdir-sys]/[Get sys]}
   Make {Run make}
   Install {Run make install install-private-headers}
@@ -2334,19 +2395,8 @@ Package tcl8.6-static {
 #@endverbatim
 ## @defgroup tcllib
 #@verbatim
-#Package tcllib1.16 {
-#  Source {Wget http://prdownloads.sourceforge.net/tcllib/Tcllib-1.16.tar.gz}
-#  Configure {Config [Get srcdir-sys]}
-#  Make {}
-#  Install {Run make install-libraries}
-#  Clean {Run make clean}
-#  Test {Run make test}
-#}
-#@endverbatim
-## @defgroup tcllib
-#@verbatim
-Package tcllib1.16 {
-  Source {Wget https://github.com/tcltk/tcllib/archive/538077c2bab80dee8539a4c6ef2f55c577b763be.zip}
+Package tcllib1.17 {
+  Source {Wget http://prdownloads.sourceforge.net/tcllib/tcllib-1.17.tar.gz}
   Configure {Config [Get srcdir-sys]}
   Make {}
   Install {Run make install-libraries}
@@ -2416,7 +2466,7 @@ Package thread2.6.7-static {
 #@verbatim
 Package tk8.5 {
   Require {Use tcl8.5}
-  Source {Wget http://prdownloads.sourceforge.net/tcl/tk8.5.17-src.tar.gz}
+  Source {Wget http://prdownloads.sourceforge.net/tcl/tk8.5.18-src.tar.gz}
   Configure {Config [Get srcdir-sys]/[Get sys]}
   Make {Run make}
   Install {Run make install install-private-headers}
@@ -2440,7 +2490,7 @@ Package tk8.5-static {
 #@verbatim
 Package tk8.6 {
   Require {Use tcl8.6}
-  Source {Wget http://prdownloads.sourceforge.net/tcl/tk8.6.3-src.tar.gz}
+  Source {Wget http://prdownloads.sourceforge.net/tcl/tk8.6.4-src.tar.gz}
   Configure {
 #    if {$::tcl_platform(os) != "Darwin"} {
 #    Patch [Get srcdir]/unix/configure 10370\
@@ -2503,7 +2553,21 @@ Package tkcon {
 Package tkdnd2.7 {
   Source {Wget http://prdownloads.sourceforge.net/tkdnd/TkDND/TkDND%202.7/tkdnd2.7-src.tar.gz}
   Configure {
+    # fix bogus garbage collection flag
     Patch [Get srcdir]/configure 8673 {    PKG_CFLAGS="$PKG_CFLAGS -DMAC_TK_COCOA -std=gnu99 -x objective-c -fobjc-gc"} {\
+    PKG_CFLAGS="$PKG_CFLAGS -DMAC_TK_COCOA -std=gnu99 -x objective-c"}
+    Config [Get srcdir-sys]
+  }
+  Make {Run make}
+  Install {Run make install}
+  Clean {Run make clean}
+  Test {Run make test}
+}
+Package tkdnd2.8 {
+  Source {Wget http://prdownloads.sourceforge.net/tkdnd/TkDND/TkDND%202.8/tkdnd2.8-src.tar.gz}
+  Configure {
+    # fix bogus garbage collection flag
+    Patch [Get srcdir]/configure 6148 {    PKG_CFLAGS="$PKG_CFLAGS -DMAC_TK_COCOA -std=gnu99 -x objective-c -fobjc-gc"} {\
     PKG_CFLAGS="$PKG_CFLAGS -DMAC_TK_COCOA -std=gnu99 -x objective-c"}
     Config [Get srcdir-sys]
   }
@@ -2536,10 +2600,45 @@ Package tksqlite0.5.11 {
 #{		Cmd::openDB [file normalize [file join $::starkit::topdir .. $_file]]}
     Kit {source $::starkit::topdir/tksqlite.tcl} Tk
   }
-  Make {Kit tksqlite sqlite3.8.7.1 tktable2.10 treectrl2.4.1}
+  Make {Kit tksqlite sqlite3.8.8.3 tktable2.10 treectrl2.4.1}
   Install {Kit tksqlite -vq-gui}
   Clean {file delete -force tksqlite.vfs}
   Test {Kit tksqlite}
+}
+#@endverbatim
+## @defgroup tkpath
+#@verbatim
+Package tkpath0.3.3 {
+  Source {Wget https://bitbucket.org/andrew_shadura/tkpath/get/a6704f14a201.zip}
+  Configure {
+    # fix ANSI ARGS define
+    Patch [Get srcdir]/generic/tkp.h 14\
+{
+/*
+ * For C++ compilers, use extern "C"
+ */
+} {/* For C++ compilers, use extern "C" */
+#ifndef _ANSI_ARGS_
+#define _ANSI_ARGS_(X) X
+#endif
+}
+    # fix link problem on OSX from forcing universal binary
+    Patch [Get srcdir]/configure 6262 \
+{	PKG_LIBS="$PKG_LIBS $i"} \
+{	#PKG_LIBS="$PKG_LIBS $i"}
+	
+    Patch [Get srcdir]/configure 6326 \
+{    PKG_CFLAGS="$PKG_CFLAGS -arch i386 -arch x86_64"} \
+{    #PKG_CFLAGS="$PKG_CFLAGS -arch i386 -arch x86_64"}
+    Config [Get srcdir-sys] --with-tkinclude=[Get srcdir-sys]/../tk8.6/generic
+  }
+  Make {
+    Run make binaries libraries
+  }
+  Install {
+    Run make install-binaries install-libraries
+  }
+  Clean {Run make clean}
 }
 #@endverbatim
 ## @defgroup tktable
@@ -2602,6 +2701,15 @@ Package trofs0.4.6 {
   Install {Run make install-binaries}
   Clean {Run make clean}
 }
+Package trofs0.4.8 {
+  Source {Wget http://math.nist.gov/~DPorter/tcltk/trofs/trofs0.4.8.tar.gz}
+  Configure {
+    Config [Get srcdir-sys]
+  }
+  Make {Run make binaries}
+  Install {Run make install-binaries}
+  Clean {Run make clean}
+}
 #@endverbatim
 ## @defgroup udp
 #@verbatim
@@ -2611,6 +2719,15 @@ Package udp1.0.8 {
     if {[Get sys] eq {unix}} {
       file attributes [Get srcdir]/tclconfig/install-sh -permissions u+x
     }
+    Config [Get srcdir-sys]
+  }
+  Make {Run make binaries}
+  Install {Run make install-binaries}
+  Clean {Run make clean}
+}
+Package udp1.0.11 {
+  Source {Wget http://prdownloads.sourceforge.net/sourceforge/tcludp/1.0.11/tcludp-1.0.11.tar.gz}
+  Configure {
     Config [Get srcdir-sys]
   }
   Make {Run make binaries}
@@ -2680,8 +2797,8 @@ Package vqtcl4.1-static {
 #@endverbatim
 ## @defgroup wcb
 #@verbatim
-Package wcb3.4 {
-  Source {Wget http://www.nemethi.de/wcb/wcb3.4.tar.gz}
+Package wcb3.5 {
+  Source {Wget http://www.nemethi.de/wcb/wcb3.5.tar.gz}
   Configure {}
   Install {Tcl}
 }
@@ -2720,13 +2837,25 @@ Package zlib1.2.8-static {
   Source {Link zlib1.2.8}
   Configure {
     eval file copy [glob [Get srcdir]/*] .
-    set MYFLAGS "[Get TCL_EXTRA_CFLAGS] [Get TCL_CFLAGS_OPTIMIZE]"
-    Run env CC=[Get CC] CFLAGS=$MYFLAGS ./configure --prefix=[Get builddir-sys] --eprefix=[Get builddir-sys]
+    if {$::tcl_platform(platform) ne {windows}} {
+      set MYFLAGS "[Get TCL_EXTRA_CFLAGS] [Get TCL_CFLAGS_OPTIMIZE]"
+      Run env CC=[Get CC] CFLAGS=$MYFLAGS ./configure --prefix=[Get builddir-sys] --eprefix=[Get builddir-sys]
+    }
   }
-  Make {Run make}
+  Make {
+    if {$::tcl_platform(platform) eq {windows}} {
+      Run env BINARY_PATH=[Get builddir]/bin INCLUDE_PATH=[Get builddir]/include LIBRARY_PATH=[Get builddir]/lib make -fwin32/Makefile.gcc
+    } else {
+      Run make
+    }
+  }
   Install {
-    file mkdir [file join [Get builddir]/share/man]
-    Run make install
+    if {$::tcl_platform(platform) eq {windows}} {
+      Run env BINARY_PATH=[Get builddir]/bin INCLUDE_PATH=[Get builddir]/include LIBRARY_PATH=[Get builddir]/lib make -fwin32/Makefile.gcc install
+    } else {
+      file mkdir [file join [Get builddir]/share/man]
+      Run make install
+    }
   }
   Clean {Run make clean}
 }

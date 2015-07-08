@@ -1,4 +1,4 @@
-kbs -- kitgen build system (version 0.4.5 for tcl/tk 8.6.1)
+kbs -- kitgen build system (version 0.4.7 for tcl/tk 8.6.4)
 ==========================
 
 The system can generate [Tclkit]  and [Tclkit Lite] executables and
@@ -23,11 +23,12 @@ Sources are available from <http://sourceforge.net/projects/kbskit>
   Batteries included interpreter:
    *kbsvq*bi
   with (8.5 and 8.6):
-    bwidget1.9.7 gridplus2.10 icons1.2 img1.4.1
-    memchan2.3 mentry3.6 nsf2.0b5 ral0.10 rbc0.1 sqlite3.8.0
-    tablelist5.10 tcllib1.15 tclx8.4 tdom0.8.3 thread2.6.7 tkcon tkdnd2.6
-    tklib0.5 tktable2.10 treectrl2.4.1 trofs0.4.6 udp1.0.8 wcb3.4 xotcl1.6.7
-  only 8.5:
+    bwidget1.9.8 gridplus2.10 icons1.2 img1.4.3
+    memchan2.3 mentry3.7 nsf2.0.0 ral0.11.2 rbc0.1 sqlite3.8.8.3
+    tablelist5.13 tcllib1.17 tclx8.4 tdom0.8.3 thread2.7.2 tkcon tkdnd2.8
+    tklib0.6 tkpath0.3.3 tktable2.10 treectrl2.4.1 trofs0.4.8 udp1.0.11
+    wcb3.5 xotcl1.6.8
+2014-12-  only 8.5:
     itcl3.4 itk3.4 iwidgets4.0.2
   only 8.6:
     itcl4.0 itk4.0 iwidgets4.1
@@ -55,7 +56,7 @@ Build requirements
 The following external programs are needed:
    * C-compiler, C++ compiler for metakit based programs
    * make with handling of VPATH variables (gmake)
-   * wget, cvs, svn, tar, gzip, unzip to get and extract sources
+   * wget, cvs, svn, bzip2, git, tar, gzip, unzip to get and extract sources
 
 To build under Windows you need the [msys] system and put the kbs-sources
 inside the msys tree (/home/..).

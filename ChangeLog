@@ -1,3 +1,22 @@
+2015-07-08  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.4.7
+	* kbs.tcl:
+	- switch to tcl8.6.4 interpreter
+	- new -git option, thanks to patch of Christian Gollwitzer
+	new:
+	- tkpath 0.3.3
+	changed:
+	- tcl/tk 8.6.4
+	- img 1.4.3
+	- mentry 3.7
+	- nsf2.0.0
+	- ral 11.2
+	- tablelist 5.13
+	- tcllib 1.17
+	- tkdnd 2.8
+	- trofs 0.4.8
+	- udp 1.0.11
+	- wcb 3.5
 2014-12-20  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.4.6
 	* kbs.tcl:
