@@ -438,7 +438,7 @@ proc ::kbs::distclean {args} {
 
 ##	Contain internally used functions and variables.
 namespace eval ::kbs::config {
-  namespace export Run Get Patch Require Source Configure Make Install Clean Test
+  namespace export Run Get Patch PatchExt Require Source Configure Make Install Clean Test
 #-------------------------------------------------------------------------------
 
 ##	Internal variable containing top level script directory.
@@ -550,6 +550,7 @@ namespace eval ::kbs::config {
   set _(makedir-sys)	{};# package and system specific build dir
   set _(srcdir)		{};# package specific source dir
   set _(srcdir-sys)	{};# package and system specific source dir
+  set _(pkgdir)         {};# package specific dir for extra files like patches
   set _(builddir)	[file join $maindir build[string map {{ } {}} $::tcl_platform(os)]]
   set _(builddir-sys)	$_(builddir)
   set _(application)	"Kitgen build system ($::kbs(version))";# application name
@@ -587,7 +588,7 @@ proc ::kbs::config::_init {used list} {
   array unset _ TK_*
 
   # create interpreter with commands
-  lappend used Run Get Patch
+  lappend used Run Get Patch PatchExt
   set interp [interp create]
   foreach myProc [namespace export] {
     if {$myProc in $used} {
@@ -643,7 +644,13 @@ proc ::kbs::config::_init {used list} {
 proc ::kbs::config::Package {name script} {
   variable packages
   variable packagescript
+  variable maindir
+  variable _
 
+  set pkgdir [file join $maindir "packages" $name]
+  if {[file exists $pkgdir]} {
+    set _(pkgdir) $pkgdir
+  }
   set packagescript($name) $script
   array set myTmp $script
   if {[info exists myTmp(Include)]} {
@@ -1388,6 +1395,43 @@ proc ::kbs::config::Patch {file lineoffset oldtext newtext} {
   puts $myFd $myC
   close $myFd
   if {$verbose} {puts "applied Patch: '$file' at $lineoffset"}
+}
+#-------------------------------------------------------------------------------
+
+##	Patch files with external patch.
+# @synopsis{Patch patchfile options}
+#
+# @examples
+#	PatchExt fix-Makefile.patch -p0
+#
+# @param[in] patchfile	name of patchfile without path
+#                       will be loaded from _(pkgdir)
+# @param[in] options	options for patch
+proc ::kbs::config::PatchExt {patchfile args} {
+  variable _
+  variable verbose
+
+  set patchfile [file join $_(pkgdir) $patchfile]
+  if {![info exists _(pkgdir)]
+      || ![file exists $_(pkgdir)]
+      || ![file exists $patchfile]} {
+    puts "[info exists _(pkgdir)]"
+    puts "[file exists $_(pkgdir)]"
+    puts "[file exists $patchfile]"
+    return -code error "missing patchfile '$patchfile'"
+  }
+  set wd [pwd]
+  cd $_(srcdir)
+  set cmd [list patch {*}$args -i $patchfile]
+  if {$::tcl_platform(platform) eq "windows"} {
+    exec {*}$cmd >__dev__null__ 2>@stderr
+  } else {
+    exec {*}$cmd >/dev/null 2>@stderr
+  }
+  cd $wd
+  if {$verbose} {
+    puts "applied patch: {*}$cmd"
+  }
 }
 #-------------------------------------------------------------------------------
 
