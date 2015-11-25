@@ -2372,7 +2372,12 @@ Package sdx.kit {
 #@verbatim
 Package snack2.2 {
   Source {Wget http://www.speech.kth.se/snack/dist/snack2.2.10.tar.gz}
-  Configure {Config [Get srcdir-sys]/[Get sys] -libdir=[Get builddir-sys]/lib --includedir=[Get builddir-sys]/include}
+  Configure {
+    PatchExt configure.patch -p0
+    PatchExt alsa.patch -p0
+    PatchExt deprecated-functions.patch -p0
+    Config [Get srcdir-sys]/[Get sys] -libdir=[Get builddir-sys]/lib --includedir=[Get builddir-sys]/include --enable-alsa
+  }
   Make {Run make}
   Install {Run make install}
   Clean {Run make clean}
