@@ -1,3 +1,20 @@
+2016-03-03  Rene Zaumseil <r.zaumseil@freenet.de>
+	Released version 0.4.8
+	* kbs.tcl:
+	- switch to tcl8.6.5 interpreter
+	new:
+	- tkpath 0.3.3
+	- pdf4tcl 0.8.2
+	- ukaz 0.2
+	- vectl 0.2
+	- vectk 0.2
+	changed:
+	- tcl/tk 8.6.5 with sqlite 3.11.0, thread 2.7.3, itcl 4.0.4, tdbc* 1.0.4
+	- tcl/tk 8.5.19
+	- tcllib 1.18
+	- bwidget 1.9.9
+	- tablelist 5.15
+	- tksqlite 5.12
 2015-07-08  Rene Zaumseil <r.zaumseil@freenet.de>
 	Released version 0.4.7
 	* kbs.tcl:
