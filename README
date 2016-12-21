@@ -1,4 +1,4 @@
-kbs -- kitgen build system (version 0.4.8 for tcl/tk 8.6.5)
+kbs -- kitgen build system (version 0.4.9 for tcl/tk 8.6.6)
 ==========================
 
 The system can generate [Tclkit]  and [Tclkit Lite] executables and
@@ -22,16 +22,12 @@ Sources are available from <http://sourceforge.net/projects/kbskit>
    *kbsvq*gui* - tk static inserted
   Batteries included interpreter:
    *kbsvq*bi
-  with (8.5 and 8.6):
-    bwidget1.9.9 gridplus2.10 icons1.2 img1.4.3
-    memchan2.3 mentry3.7 nsf2.0.0 ral0.11.2 pdf4tcl0.8.2 rbc0.1 sqlite3.11.0
-    tablelist5.15 tcllib1.18 tclx8.4 tdom0.8.3 thread2.7.3 tkcon tkdnd2.8
-    tklib0.6 tkpath0.3.3 tktable2.10 treectrl2.4.1 trofs0.4.8 udp1.0.11
-    wcb3.5 xotcl1.6.8
-2014-12-  only 8.5:
-    itcl3.4 itk3.4 iwidgets4.0.2
-  only 8.6:
-    itcl4.0 itk4.0 iwidgets4.1
+  with:
+    bwidget1.9.10 gridplus2.11 icons1.2 img1.4.6
+    memchan2.3 mentry3.7 nsf2.0.0 pdf4tcl0.8.4 ral0.11.7 rbc0.1
+    tablelist5.16 tcllib1.18 tclx8.4 tdom0.8.3 thread2.7.2 tkcon tkdnd2.8
+    tklib0.6 tkpath0.3.3 tktable2.10 treectrl2.4.1 trofs0.4.9 udp1.0.11
+    ukaz0.2 vectcl0.2 vectcltk0.2 wcb3.5 xotcl1.6.8
 
 Quick start
 -----------
@@ -58,9 +54,9 @@ The following external programs are needed:
    * make with handling of VPATH variables (gmake)
    * wget, cvs, svn, bzip2, git, tar, gzip, unzip to get and extract sources
 
-To build under Windows you need the [msys] system and put the kbs-sources
-inside the msys tree (/home/..).
-  [msys]:   http://sourceforge.net/project/showfiles.php?group_id=10894
+To build under Windows you need the [mingw] (c:\mingw32) and [msys] (c:\mingw32\msys). Put "c:\ming32 /mingw" in c:\ming32\msys\etc\fstab and copy kbs in C:\ming32\msys\home\<USER>
+  [mingw]: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/5.3.0/threads-win32/sjlj/i686-5.3.0-release-win32-sjlj-rt_v4-rev0.7z
+  [msys]:  https://sourceforge.net/projects/mingwbuilds/files/external-binary-packages/msys+7za+wget+svn+git+mercurial+cvs-rev13.7z
 
 License & support
 -----------------
